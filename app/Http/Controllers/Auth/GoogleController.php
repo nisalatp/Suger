@@ -79,12 +79,19 @@ class GoogleController extends Controller
 
     /**
      * Check if user needs to complete onboarding.
+     * Only redirect on true first login — i.e. the profile was just created
+     * and has never been saved by the user (updated_at equals created_at or is null).
      */
     private function needsOnboarding(User $user): bool
     {
         $profile = $user->profile;
-        return !$profile
-            || $profile->diabetes_type === 'unknown'
-            || is_null($profile->date_of_birth);
+
+        // No profile at all → first ever login
+        if (!$profile) return true;
+
+        // Profile exists but has no consents yet → still in onboarding
+        if ($user->consents()->where('revoked_at', null)->count() === 0) return true;
+
+        return false;
     }
 }
