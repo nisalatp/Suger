@@ -90,3 +90,14 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// ── Sync Tool (dev dashboard + prod API) ─────────────────────────────────────
+// Protected: dashboard by ?key= + isDev(), prod endpoints by X-Sync-Token header.
+// To disable: simply delete app/Http/Controllers/SyncController.php
+if (class_exists(\App\Http\Controllers\SyncController::class)) {
+    Route::get('/sync', [\App\Http\Controllers\SyncController::class, 'dashboard']);
+    Route::get('/sync/api/{mode}', [\App\Http\Controllers\SyncController::class, 'devEndpoint']);
+    Route::post('/sync/api/{mode}', [\App\Http\Controllers\SyncController::class, 'devEndpoint']);
+    Route::get('/api/sync/{mode}', [\App\Http\Controllers\SyncController::class, 'prodEndpoint']);
+    Route::post('/api/sync/{mode}', [\App\Http\Controllers\SyncController::class, 'prodEndpoint']);
+}
