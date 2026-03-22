@@ -84,9 +84,14 @@ const doctorNavItem = {
             isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
         ]">
             <!-- Sidebar Header / Logo -->
-            <div :class="['flex items-center h-16 border-b border-gray-100 shrink-0 transition-all duration-300', isSidebarCollapsed ? 'justify-center px-0' : 'px-6 gap-3']">
+            <div :class="['flex items-center h-16 border-b border-gray-100 shrink-0 transition-all duration-300', isSidebarCollapsed ? 'justify-center px-2 gap-0' : 'px-4 gap-3']"> 
                 <img src="/assets/images/suger-logo.png" alt="Suger" class="h-8 w-8 rounded-lg shrink-0" />
-                <span v-if="!isSidebarCollapsed || showingMobileMenu" class="text-xl font-bold text-gray-900 tracking-tight whitespace-nowrap transition-opacity duration-300">Suger</span>
+                <span v-if="!isSidebarCollapsed || showingMobileMenu" class="text-xl font-bold text-gray-900 tracking-tight whitespace-nowrap transition-opacity duration-300 flex-1">Suger</span>
+                <!-- Collapse toggle — header position (standard: Linear, Notion, VS Code) -->
+                <button @click="toggleSidebar" :title="isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" class="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors shrink-0">
+                    <svg v-if="!isSidebarCollapsed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" /></svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" /></svg>
+                </button>
             </div>
 
             <!-- Sidebar Navigation -->
@@ -139,13 +144,8 @@ const doctorNavItem = {
                 </Link>
             </div>
 
-            <!-- Sidebar Footer / Collapse Toggle & User Profile -->
+            <!-- Sidebar Footer / User Profile -->
             <div class="border-t border-gray-100 shrink-0 p-3 flex flex-col gap-2">
-                <!-- Desktop Collapse Toggle -->
-                <button @click="toggleSidebar" class="hidden lg:flex items-center justify-center w-full p-2.5 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors">
-                    <svg v-if="!isSidebarCollapsed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" /></svg>
-                    <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" /></svg>
-                </button>
 
                 <Dropdown align="top-left" width="48">
                     <template #trigger>
