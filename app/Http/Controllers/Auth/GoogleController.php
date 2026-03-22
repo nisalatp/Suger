@@ -30,23 +30,27 @@ class GoogleController extends Controller
             $googleUser = Socialite::driver('google')->user();
 
             // Find by google_sub first, fallback to email (handles seeded users)
-            $user = User::where('google_sub', $googleUser->id)->first()
+            $existing = User::where('google_sub', $googleUser->id)->first()
                 ?? User::where('email', $googleUser->email)->first();
 
+            // Track whether this is a brand-new user (true first sign-in)
+            $isNewUser = $existing === null;
+
             $attrs = [
-                'google_sub' => $googleUser->id,
-                'email' => $googleUser->email,
+                'google_sub'     => $googleUser->id,
+                'email'          => $googleUser->email,
                 'email_verified' => true,
-                'name' => $googleUser->name,
-                'given_name' => $googleUser->user['given_name'] ?? null,
-                'family_name' => $googleUser->user['family_name'] ?? null,
-                'avatar_url' => $googleUser->avatar,
-                'locale' => $googleUser->user['locale'] ?? null,
-                'last_login_at' => now(),
+                'name'           => $googleUser->name,
+                'given_name'     => $googleUser->user['given_name'] ?? null,
+                'family_name'    => $googleUser->user['family_name'] ?? null,
+                'avatar_url'     => $googleUser->avatar,
+                'locale'         => $googleUser->user['locale'] ?? null,
+                'last_login_at'  => now(),
             ];
 
-            if ($user) {
-                $user->update($attrs);
+            if ($existing) {
+                $existing->update($attrs);
+                $user = $existing;
             } else {
                 $user = User::create($attrs);
             }
@@ -64,8 +68,8 @@ class GoogleController extends Controller
 
             AuditService::log($user, 'auth.google_login');
 
-            // Redirect to onboarding if profile is incomplete, otherwise dashboard
-            if ($this->needsOnboarding($user)) {
+            // Onboarding only on the very first sign-in
+            if ($isNewUser) {
                 return redirect()->route('onboarding.profile');
             }
 
@@ -77,21 +81,4 @@ class GoogleController extends Controller
         }
     }
 
-    /**
-     * Check if user needs to complete onboarding.
-     * Only redirect on true first login — i.e. the profile was just created
-     * and has never been saved by the user (updated_at equals created_at or is null).
-     */
-    private function needsOnboarding(User $user): bool
-    {
-        $profile = $user->profile;
-
-        // No profile at all → first ever login
-        if (!$profile) return true;
-
-        // Profile exists but has no consents yet → still in onboarding
-        if ($user->consents()->where('revoked_at', null)->count() === 0) return true;
-
-        return false;
-    }
 }
