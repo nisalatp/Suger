@@ -99,9 +99,20 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = auth()->user();
+        $profile = $user->profile;
+
         return Inertia::render('Profile/Edit', [
-            'user' => $user,
-            'profile' => $user->profile,
+            'profile' => $profile ? [
+                'date_of_birth'              => $profile->date_of_birth?->format('Y-m-d'),
+                'gender'                     => $profile->gender,
+                'height_cm'                  => $profile->height_cm,
+                'weight_kg'                  => $profile->weight_kg,
+                'bmi'                        => $profile->bmi,
+                'diabetes_type'              => $profile->diabetes_type,
+                'diagnosis_date'             => $profile->diagnosis_date?->format('Y-m-d'),
+                'blood_group'                => $profile->blood_group,
+                'family_history_summary_enc' => $profile->family_history_summary_enc,
+            ] : null,
         ]);
     }
 
@@ -111,18 +122,25 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'date_of_birth' => 'nullable|date|before:today',
-            'gender' => 'nullable|in:male,female,other',
-            'height_cm' => 'nullable|numeric|min:30|max:300',
-            'weight_kg' => 'nullable|numeric|min:10|max:500',
-            'diabetes_type' => 'required|in:type1,type2,gestational,prediabetes,other,unknown',
-            'diagnosis_date' => 'nullable|date|before:today',
-            'blood_group' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-,unknown',
+            'date_of_birth'              => 'nullable|date|before:today',
+            'gender'                     => 'nullable|in:male,female,other',
+            'height_cm'                  => 'nullable|numeric|min:30|max:300',
+            'weight_kg'                  => 'nullable|numeric|min:10|max:500',
+            'diabetes_type'              => 'nullable|in:type1,type2,gestational,prediabetes,other,unknown',
+            'diagnosis_date'             => 'nullable|date|before:today',
+            'blood_group'                => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-,unknown',
             'family_history_summary_enc' => 'nullable|string|max:5000',
         ]);
 
         $user = auth()->user();
-        $user->profile->update($validated);
+
+        // updateOrCreate so users who skipped onboarding still get a profile row.
+        // We pass all validated fields (including explicit nulls) so clearing a field
+        // like date_of_birth actually writes NULL instead of being silently dropped.
+        $user->profile()->updateOrCreate(
+            ['user_id' => $user->id],
+            $validated
+        );
 
         AuditService::log($user, 'profile.updated', 'user_profile', $user->id);
 

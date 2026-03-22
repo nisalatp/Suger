@@ -212,20 +212,13 @@
 
 
 
-[type='text'], [type='file'], input:where(:not([type])), [type='email'], [type='url'], [type='password'], [type='number'], [type='date'], [type='datetime-local'], [type='month'], [type='search'], [type='tel'], [type='time'], [type='week'], [multiple], textarea, select{
+[type='text'], [type='file'], input:where(:not([type])), [type='email'], [type='url'], [type='password'], [type='number'], [type='date'], [type='datetime-local'], [type='month'], [type='search'], [type='tel'], [type='time'], [type='week'], [multiple], textarea, select {
   font-size: .875rem;
   appearance: none;
-    background-color: #fff;
-
-    border-width: 1px;
-
-    padding-top: 0.5rem;
-    padding-right: 0.75rem;
-    padding-bottom: 0.5rem;
-    padding-left: 0.75rem;
-
-    line-height: 1.5rem;
-    --tw-shadow: 0 0 #0000;
+  background-color: #fff;
+  border-width: 1px;
+  line-height: 1.5rem;
+  --tw-shadow: 0 0 #0000;
 }
 
 

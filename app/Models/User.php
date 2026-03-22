@@ -24,6 +24,7 @@ class User extends Authenticatable
         'avatar_url',
         'locale',
         'timezone',
+        'is_doctor',
         'password',
         'last_login_at',
     ];
@@ -37,9 +38,22 @@ class User extends Authenticatable
     {
         return [
             'email_verified' => 'boolean',
-            'last_login_at' => 'datetime',
-            'password' => 'hashed',
+            'last_login_at'  => 'datetime',
+            'is_doctor'      => 'boolean',
+            'password'       => 'hashed',
         ];
+    }
+
+    // Every user is always a patient (can track their own health)
+    public function isPatient(): bool
+    {
+        return true;
+    }
+
+    // A user can additionally be a doctor (has access to My Patients portal)
+    public function isDoctor(): bool
+    {
+        return (bool) $this->is_doctor;
     }
 
     // ── Relationships ──
@@ -92,5 +106,17 @@ class User extends Authenticatable
     public function auditEvents()
     {
         return $this->hasMany(AuditEvent::class);
+    }
+
+    // Doctor-side: patients that this doctor user has access to
+    public function linkedPatients()
+    {
+        return $this->hasMany(DoctorPatientLink::class, 'doctor_user_id');
+    }
+
+    // Patient-side: doctors who have access to this patient
+    public function linkedDoctors()
+    {
+        return $this->hasMany(DoctorPatientLink::class, 'patient_user_id');
     }
 }

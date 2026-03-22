@@ -7,6 +7,7 @@ use App\Http\Controllers\MealController;
 use App\Http\Controllers\MedicationController;
 use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ReportExportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -58,14 +59,29 @@ Route::middleware('auth')->group(function () {
     // Medications
     Route::resource('medications', MedicationController::class)->except(['show', 'edit']);
     Route::post('/medications/{medication}/dose', [MedicationController::class, 'recordDose'])->name('medications.dose');
+    Route::delete('/medication-events/{event}', [MedicationController::class, 'destroyEvent'])->name('medications.events.destroy');
 
     // Exercise
     Route::resource('exercise', ExerciseController::class)->parameters([
         'exercise' => 'exercise:public_id',
     ]);
 
-    // Doctors
-    Route::resource('doctors', DoctorController::class)->except(['show', 'create', 'edit']);
+    // Doctors — patient-side doctor linking & permissions
+    Route::get('/doctors', [DoctorController::class, 'index'])->name('doctors.index');
+    Route::get('/doctors/search', [DoctorController::class, 'search'])->name('doctors.search');
+    Route::post('/doctors/link', [DoctorController::class, 'link'])->name('doctors.link');
+    Route::delete('/doctors/{doctorUserId}', [DoctorController::class, 'unlink'])->name('doctors.unlink');
+    Route::patch('/doctors/{doctorUserId}/permission', [DoctorController::class, 'updatePermission'])->name('doctors.permission');
+
+
+    // Doctor Portal — My Patients
+    Route::get('/my-patients', [PatientController::class, 'index'])->name('patients.index');
+    Route::get('/my-patients/{patient}', [PatientController::class, 'show'])->name('patients.show');
+    Route::post('/my-patients/compare', [PatientController::class, 'compare'])->name('patients.compare');
+
+    // User profile: toggle doctor mode
+    Route::post('/profile/enable-doctor', [PatientController::class, 'enableDoctorMode'])->name('profile.enable_doctor');
+    Route::post('/profile/disable-doctor', [PatientController::class, 'disableDoctorMode'])->name('profile.disable_doctor');
 
     // Reports
     Route::get('/reports', [ReportExportController::class, 'index'])->name('reports.index');

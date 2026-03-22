@@ -10,24 +10,107 @@ use Inertia\Inertia;
 
 class MedicationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
+        $tz = $user->timezone ?? 'UTC';
+        $nowUser = \Carbon\Carbon::now($tz);
+
+        // -- Active Medications List (For Quick Log) --
         $medications = $user->medications()
             ->withCount('events')
             ->orderByDesc('active')
             ->orderBy('name')
             ->get();
 
-        $recentEvents = $user->medicationEvents()
-            ->with('medication:id,name')
-            ->orderByDesc('taken_at_utc')
-            ->take(20)
+        // -- Alerts Logic --
+        $alerts = [];
+        $todayEvents = $user->medicationEvents()
+            ->where('taken_at_utc', '>=', $nowUser->copy()->startOfDay()->utc())
+            ->where('taken_at_utc', '<=', $nowUser->copy()->endOfDay()->utc())
             ->get();
+
+        $currentHour = $nowUser->hour;
+        $activeMeds = $medications->where('active', true);
+
+        if ($activeMeds->isNotEmpty()) {
+            if ($todayEvents->isEmpty()) {
+                if ($currentHour < 12) {
+                    $alerts[] = ['type' => 'amber', 'message' => 'Morning Routine', 'time' => 'Log your AM medications'];
+                } elseif ($currentHour < 20) {
+                    $alerts[] = ['type' => 'amber', 'message' => 'Daily Medications', 'time' => 'No doses logged yet today'];
+                } else {
+                    $alerts[] = ['type' => 'red', 'message' => 'Missed Meds', 'time' => 'No activity logged today'];
+                }
+            } else {
+                // Determine if they missed evening meds (proxy: past 20:00 but no doses after 18:00)
+                $eveningDoses = $todayEvents->filter(function($e) use ($tz) {
+                    return \Carbon\Carbon::parse($e->taken_at_utc)->timezone($tz)->hour >= 18;
+                });
+                if ($currentHour >= 20 && $eveningDoses->isEmpty()) {
+                    $alerts[] = ['type' => 'amber', 'message' => 'Evening Routine', 'time' => 'Did you take your PM meds?'];
+                }
+            }
+        }
+
+        // -- Chart Data --
+        $chartRange = $request->input('chart_range', '1week');
+        $rangeStart = match($chartRange) {
+            'today' => $nowUser->copy()->startOfDay(),
+            '1week' => $nowUser->copy()->subDays(6)->startOfDay(),
+            '1month' => $nowUser->copy()->subDays(29)->startOfDay(),
+            '3month' => $nowUser->copy()->subMonths(3)->startOfDay(),
+            '1year'  => $nowUser->copy()->subYear()->startOfDay(),
+            '5year'  => $nowUser->copy()->subYears(5)->startOfDay(),
+            default  => $nowUser->copy()->subDays(6)->startOfDay(),
+        };
+
+        $chartEvents = $user->medicationEvents()
+            ->where('taken_at_utc', '>=', $rangeStart->utc())
+            ->where('taken_at_utc', '<=', $nowUser->copy()->endOfDay()->utc())
+            ->orderBy('taken_at_utc')
+            ->get()
+            ->groupBy(function($e) use ($tz) {
+                return \Carbon\Carbon::parse($e->taken_at_utc)->setTimezone($tz)->format('Y-m-d');
+            });
+
+        $chartData = [];
+        $currentDate = $rangeStart->copy();
+        while($currentDate <= $nowUser) {
+            $dateStr = $currentDate->format('Y-m-d');
+            $dayEvents = $chartEvents->get($dateStr, collect());
+            
+            $chartData[] = [
+                'date' => $currentDate->format('M j'),
+                'full_date' => $dateStr,
+                'doses' => $dayEvents->count(),
+                // Support calendar widget mapping
+                'calories' => $dayEvents->count(), 
+            ];
+            $currentDate->addDay();
+        }
+
+        // -- Paginated History --
+        $query = $user->medicationEvents()->with('medication:id,name,route')->orderByDesc('taken_at_utc');
+        
+        if ($request->filled('from')) {
+            $query->where('taken_at_utc', '>=', \Carbon\Carbon::parse($request->from)->startOfDay()->utc());
+        }
+        if ($request->filled('to')) {
+            $query->where('taken_at_utc', '<=', \Carbon\Carbon::parse($request->to)->endOfDay()->utc());
+        }
+
+        $paginatedEvents = $query->paginate(20)->withQueryString();
 
         return Inertia::render('Medications/Index', [
             'medications' => $medications,
-            'recentEvents' => $recentEvents,
+            'events' => $paginatedEvents,
+            'filters' => $request->only(['from', 'to', 'chart_range']),
+            'chartData' => $chartData,
+            'alerts' => $alerts,
+            'stats' => [
+                'today_doses' => $todayEvents->count(),
+            ]
         ]);
     }
 
@@ -117,5 +200,21 @@ class MedicationController extends Controller
         AuditService::log(auth()->user(), 'medication_event.created', 'medication_event', $event->id);
 
         return back()->with('success', 'Dose recorded.');
+    }
+
+    /**
+     * Remove a medication dose event.
+     */
+    public function destroyEvent(\App\Models\MedicationEvent $event)
+    {
+        if ($event->user_id !== auth()->id()) {
+            abort(404);
+        }
+
+        $event->delete();
+
+        AuditService::log(auth()->user(), 'medication_event.deleted', 'medication_event', $event->id);
+
+        return back()->with('success', 'Dose record removed.');
     }
 }

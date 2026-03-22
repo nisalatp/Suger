@@ -20,15 +20,33 @@ trait EncryptsAttributes
         $value = parent::getAttribute($key);
 
         if ($this->isEncryptedAttribute($key) && !is_null($value) && $value !== '') {
+            // Primary: Crypt::decrypt() — handles data stored via Crypt::encrypt() (with serialize).
+            // This is what was used when the data was originally written.
+            try {
+                return Crypt::decrypt($value);
+            } catch (\Exception) {
+                // ignore
+            }
+            // Fallback: Crypt::decryptString() — for data stored via Crypt::encryptString() (no serialize).
             try {
                 return Crypt::decryptString($value);
-            } catch (\Exception $e) {
-                return $value; // Return raw if decryption fails (e.g., already decrypted)
+            } catch (\Exception) {
+                // ignore
+            }
+            // Last resort: plain PHP serialize() strings stored directly
+            if (is_string($value) && preg_match('/^(s|a|O|i|b):\d+[:{]/', $value)) {
+                $unserialized = @unserialize($value);
+                if ($unserialized !== false) {
+                    return $unserialized;
+                }
             }
         }
 
         return $value;
     }
+
+
+
 
     public function setAttribute($key, $value)
     {

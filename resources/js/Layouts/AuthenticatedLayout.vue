@@ -33,6 +33,12 @@ const navItems = [
     { name: 'Doctors', route: 'doctors.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m-3-3h6M5 3h14A2 2 0 0121 5v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg>' },
     { name: 'Reports', route: 'reports.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6zM13.5 3v7.5H21A7.5 7.5 0 0013.5 3z" /></svg>' },
 ];
+
+const doctorNavItem = {
+    name: 'My Patients',
+    route: 'patients.index',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>',
+};
 </script>
 
 <template>
@@ -83,6 +89,28 @@ const navItems = [
                 </Link>
             </div>
 
+            <!-- Doctor Portal nav item (only shown if is_doctor) -->
+            <div v-if="$page.props.auth.user.is_doctor" class="px-3 pb-2">
+                <div class="border-t border-gray-100 pt-2 mb-1">
+                    <p v-if="!isSidebarCollapsed" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-1 mb-1">Doctor Portal</p>
+                </div>
+                <Link :href="route(doctorNavItem.route)"
+                    :title="isSidebarCollapsed ? doctorNavItem.name : ''"
+                    :class="[
+                        'flex items-center rounded-xl text-sm font-medium transition-colors group relative',
+                        isSidebarCollapsed ? 'justify-center p-3' : 'px-4 py-3 gap-3',
+                        route().current(doctorNavItem.route)
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-600 hover:bg-blue-50/60 hover:text-blue-700'
+                    ]">
+                    <span class="shrink-0" v-html="doctorNavItem.icon"></span>
+                    <span v-if="!isSidebarCollapsed || showingMobileMenu" class="whitespace-nowrap">{{ doctorNavItem.name }}</span>
+                    <div v-if="isSidebarCollapsed && !showingMobileMenu" class="absolute left-full ml-3 hidden group-hover:block bg-gray-800 text-white text-xs font-semibold px-2 py-1.5 rounded-md whitespace-nowrap z-50">
+                        {{ doctorNavItem.name }}
+                    </div>
+                </Link>
+            </div>
+
             <!-- Sidebar Footer / Collapse Toggle & User Profile -->
             <div class="border-t border-gray-100 shrink-0 p-3 flex flex-col gap-2">
                 <!-- Desktop Collapse Toggle -->
@@ -110,6 +138,12 @@ const navItems = [
                     </template>
                     <template #content>
                         <DropdownLink :href="route('profile.edit')">Profile Settings</DropdownLink>
+                        <form v-if="!$page.props.auth.user.is_doctor" :action="route('profile.enable_doctor')" method="POST" @submit.prevent="$inertia.post(route('profile.enable_doctor'))">
+                            <button type="submit" class="w-full text-left block px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 transition">Enable Doctor Mode 🩺</button>
+                        </form>
+                        <form v-else :action="route('profile.disable_doctor')" method="POST" @submit.prevent="$inertia.post(route('profile.disable_doctor'))">
+                            <button type="submit" class="w-full text-left block px-4 py-2 text-sm leading-5 text-gray-500 hover:bg-gray-100 transition">Disable Doctor Mode</button>
+                        </form>
                         <DropdownLink :href="route('logout')" method="post" as="button">Log Out</DropdownLink>
                     </template>
                 </Dropdown>
