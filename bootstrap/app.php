@@ -16,7 +16,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        // Sync tool prod endpoints are authenticated via X-Sync-Token, not CSRF
+        $middleware->validateCsrfTokens(except: [
+            'api/sync/*',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
