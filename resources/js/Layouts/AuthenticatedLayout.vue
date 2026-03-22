@@ -1,15 +1,37 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
+const page = usePage();
 const showingMobileMenu = ref(false);
 const isSidebarCollapsed = ref(false);
 
+// ── Server time display ──
+// Seed from server prop (Asia/Colombo), then tick every second using JS
+// so the display stays live between page navigations.
+const displayTime = ref(page.props.server_time ?? '');
+let _timerId = null;
+
+function _tickTime() {
+    // Parse the server time once to get an offset, then advance it client-side
+    const now = new Date();
+    // Format: "Sun, 22 Mar · 20:36:24"
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    // Use Asia/Colombo offset (UTC+05:30 = +330 min)
+    const lk = new Date(now.getTime() + (5 * 60 + 30) * 60000 - now.getTimezoneOffset() * 60000);
+    const d = lk.getUTCDay(), dt = String(lk.getUTCDate()).padStart(2,'0');
+    const mo = months[lk.getUTCMonth()];
+    const h = String(lk.getUTCHours()).padStart(2,'0');
+    const m = String(lk.getUTCMinutes()).padStart(2,'0');
+    const s = String(lk.getUTCSeconds()).padStart(2,'0');
+    displayTime.value = `${days[d]}, ${dt} ${mo} · ${h}:${m}:${s}`;
+}
+
 const toggleSidebar = () => {
     isSidebarCollapsed.value = !isSidebarCollapsed.value;
-    // Save preference to localStorage if desired
     if (typeof localStorage !== 'undefined') {
         localStorage.setItem('sidebar_collapsed', isSidebarCollapsed.value ? '1' : '0');
     }
@@ -22,6 +44,12 @@ onMounted(() => {
             isSidebarCollapsed.value = true;
         }
     }
+    _timerId = setInterval(_tickTime, 1000);
+    _tickTime(); // immediate first tick
+});
+
+onUnmounted(() => {
+    if (_timerId) clearInterval(_timerId);
 });
 
 const navItems = [
@@ -158,6 +186,11 @@ const doctorNavItem = {
                 <div class="flex items-center gap-2">
                     <img src="/assets/images/suger-logo.png" alt="Suger" class="h-8 w-8 rounded-lg" />
                     <span class="text-lg font-bold text-gray-900 tracking-tight">Suger</span>
+                </div>
+                <!-- Server time: center -->
+                <div class="absolute left-1/2 -translate-x-1/2 flex flex-col items-center leading-tight pointer-events-none select-none">
+                    <span class="text-[11px] font-semibold text-purple-600 tabular-nums tracking-tight">{{ displayTime }}</span>
+                    <span class="text-[9px] text-gray-400 font-medium">Server · LK</span>
                 </div>
                 <button @click="showingMobileMenu = true" aria-label="Open menu" class="p-2 -mr-2 text-gray-500 hover:text-gray-900 rounded-lg hover:bg-gray-50 focus:outline-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>

@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'server_time' => now()->format('D, d M · H:i:s'),
         ];
     }
 }
