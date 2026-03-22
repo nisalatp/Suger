@@ -2,49 +2,95 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasPublicId;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes, HasPublicId;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name',
+        'public_id',
+        'google_sub',
         'email',
+        'email_verified',
+        'name',
+        'given_name',
+        'family_name',
+        'avatar_url',
+        'locale',
+        'timezone',
         'password',
-        'google_id',
-        'avatar',
+        'last_login_at',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
+            'email_verified' => 'boolean',
+            'last_login_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    // ── Relationships ──
+
+    public function profile()
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    public function glucoseReadings()
+    {
+        return $this->hasMany(GlucoseReading::class);
+    }
+
+    public function meals()
+    {
+        return $this->hasMany(Meal::class);
+    }
+
+    public function medications()
+    {
+        return $this->hasMany(Medication::class);
+    }
+
+    public function medicationEvents()
+    {
+        return $this->hasMany(MedicationEvent::class);
+    }
+
+    public function exercises()
+    {
+        return $this->hasMany(Exercise::class);
+    }
+
+    public function doctors()
+    {
+        return $this->hasMany(Doctor::class);
+    }
+
+    public function reportExports()
+    {
+        return $this->hasMany(ReportExport::class);
+    }
+
+    public function consents()
+    {
+        return $this->hasMany(Consent::class);
+    }
+
+    public function auditEvents()
+    {
+        return $this->hasMany(AuditEvent::class);
     }
 }

@@ -41,4 +41,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
 
+    'calorieninjas' => [
+        'key' => env('CALORIENINJAS_API_KEY'),
+    ],
+
 ];

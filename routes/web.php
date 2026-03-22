@@ -1,10 +1,18 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GlucoseReadingController;
+use App\Http\Controllers\MealController;
+use App\Http\Controllers\MedicationController;
+use App\Http\Controllers\ExerciseController;
+use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\ReportExportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// ── Public ──
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -14,17 +22,55 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// ── Google OAuth ──
+Route::get('/auth/google', [\App\Http\Controllers\Auth\GoogleController::class, 'redirect'])->name('google.login');
+Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleController::class, 'callback']);
 
+// ── Authenticated routes ──
 Route::middleware('auth')->group(function () {
+
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Onboarding
+    Route::get('/onboarding/profile', [ProfileController::class, 'showOnboarding'])->name('onboarding.profile');
+    Route::post('/onboarding/profile', [ProfileController::class, 'saveOnboarding'])->name('onboarding.profile.save');
+    Route::get('/onboarding/consent', [ProfileController::class, 'showConsent'])->name('onboarding.consent');
+    Route::post('/onboarding/consent', [ProfileController::class, 'saveConsent'])->name('onboarding.consent.save');
+
+    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Glucose Readings
+    Route::resource('glucose', GlucoseReadingController::class)->parameters([
+        'glucose' => 'glucoseReading:public_id',
+    ]);
+
+    // Nutrition API
+    Route::post('/nutrition/analyze', [\App\Http\Controllers\NutritionController::class, 'analyze'])->name('nutrition.analyze');
+
+    // Meals
+    Route::resource('meals', MealController::class)->parameters([
+        'meals' => 'meal:public_id',
+    ]);
+
+    // Medications
+    Route::resource('medications', MedicationController::class)->except(['show', 'edit']);
+    Route::post('/medications/{medication}/dose', [MedicationController::class, 'recordDose'])->name('medications.dose');
+
+    // Exercise
+    Route::resource('exercise', ExerciseController::class)->parameters([
+        'exercise' => 'exercise:public_id',
+    ]);
+
+    // Doctors
+    Route::resource('doctors', DoctorController::class)->except(['show', 'create', 'edit']);
+
+    // Reports
+    Route::get('/reports', [ReportExportController::class, 'index'])->name('reports.index');
+    Route::post('/reports', [ReportExportController::class, 'store'])->name('reports.store');
+    Route::get('/reports/{reportExport:public_id}/download', [ReportExportController::class, 'download'])->name('reports.download');
 });
 
 require __DIR__.'/auth.php';
-
-Route::get('/auth/google', [\App\Http\Controllers\Auth\GoogleController::class, 'redirect'])->name('google.login');
-Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\GoogleController::class, 'callback']);

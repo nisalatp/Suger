@@ -2,62 +2,130 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ProfileUpdateRequest;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Http\RedirectResponse;
+use App\Models\UserProfile;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-use Inertia\Response;
 
 class ProfileController extends Controller
 {
     /**
-     * Display the user's profile form.
+     * Show the onboarding profile form.
      */
-    public function edit(Request $request): Response
+    public function showOnboarding()
     {
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
+        $user = auth()->user();
+        $profile = $user->profile ?? new UserProfile();
+
+        return Inertia::render('Onboarding/Profile', [
+            'user' => $user->only('name', 'given_name', 'family_name', 'email', 'avatar_url'),
+            'profile' => $profile,
         ]);
     }
 
     /**
-     * Update the user's profile information.
+     * Save the onboarding profile.
      */
-    public function update(ProfileUpdateRequest $request): RedirectResponse
+    public function saveOnboarding(Request $request)
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validate([
+            'date_of_birth' => 'nullable|date|before:today',
+            'gender' => 'nullable|in:male,female,other',
+            'height_cm' => 'nullable|numeric|min:30|max:300',
+            'weight_kg' => 'nullable|numeric|min:10|max:500',
+            'diabetes_type' => 'required|in:type1,type2,gestational,prediabetes,other,unknown',
+            'diagnosis_date' => 'nullable|date|before:today',
+            'blood_group' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-,unknown',
+        ]);
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user = auth()->user();
+        $profile = UserProfile::updateOrCreate(
+            ['user_id' => $user->id],
+            $validated
+        );
+
+        AuditService::log($user, 'profile.updated', 'user_profile', $user->id);
+
+        return redirect()->route('onboarding.consent');
+    }
+
+    /**
+     * Show the consent onboarding page.
+     */
+    public function showConsent()
+    {
+        $user = auth()->user();
+        $consents = $user->consents()->get();
+
+        return Inertia::render('Onboarding/Consent', [
+            'consents' => $consents,
+        ]);
+    }
+
+    /**
+     * Save consents from onboarding.
+     */
+    public function saveConsent(Request $request)
+    {
+        $validated = $request->validate([
+            'health_processing' => 'required|boolean|accepted',
+            'terms' => 'required|boolean|accepted',
+            'privacy' => 'required|boolean|accepted',
+        ]);
+
+        $user = auth()->user();
+
+        foreach (['health_processing', 'terms', 'privacy'] as $type) {
+            if ($request->boolean($type)) {
+                $user->consents()->updateOrCreate(
+                    ['consent_type' => $type, 'revoked_at' => null],
+                    [
+                        'version' => '1.0',
+                        'granted_at' => now(),
+                        'ui_surface' => 'web',
+                    ]
+                );
+            }
         }
 
-        $request->user()->save();
+        AuditService::log($user, 'consent.granted', 'consent', $user->id);
 
-        return Redirect::route('profile.edit');
+        return redirect()->route('dashboard');
     }
 
     /**
-     * Delete the user's account.
+     * Show the profile edit page (post-onboarding).
      */
-    public function destroy(Request $request): RedirectResponse
+    public function edit()
     {
-        $request->validate([
-            'password' => ['required', 'current_password'],
+        $user = auth()->user();
+        return Inertia::render('Profile/Edit', [
+            'user' => $user,
+            'profile' => $user->profile,
+        ]);
+    }
+
+    /**
+     * Update the user's profile.
+     */
+    public function update(Request $request)
+    {
+        $validated = $request->validate([
+            'date_of_birth' => 'nullable|date|before:today',
+            'gender' => 'nullable|in:male,female,other',
+            'height_cm' => 'nullable|numeric|min:30|max:300',
+            'weight_kg' => 'nullable|numeric|min:10|max:500',
+            'diabetes_type' => 'required|in:type1,type2,gestational,prediabetes,other,unknown',
+            'diagnosis_date' => 'nullable|date|before:today',
+            'blood_group' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-,unknown',
+            'family_history_summary_enc' => 'nullable|string|max:5000',
         ]);
 
-        $user = $request->user();
+        $user = auth()->user();
+        $user->profile->update($validated);
 
-        Auth::logout();
+        AuditService::log($user, 'profile.updated', 'user_profile', $user->id);
 
-        $user->delete();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return Redirect::to('/');
+        return back()->with('success', 'Profile updated.');
     }
 }

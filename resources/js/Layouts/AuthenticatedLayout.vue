@@ -1,196 +1,146 @@
 <script setup>
-import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import { ref, onMounted } from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link } from '@inertiajs/vue3';
 
-const showingNavigationDropdown = ref(false);
+const showingMobileMenu = ref(false);
+const isSidebarCollapsed = ref(false);
+
+const toggleSidebar = () => {
+    isSidebarCollapsed.value = !isSidebarCollapsed.value;
+    // Save preference to localStorage if desired
+    if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('sidebar_collapsed', isSidebarCollapsed.value ? '1' : '0');
+    }
+};
+
+onMounted(() => {
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+        const savedState = localStorage.getItem('sidebar_collapsed');
+        if (savedState === '1') {
+            isSidebarCollapsed.value = true;
+        }
+    }
+});
+
+const navItems = [
+    { name: 'Dashboard', route: 'dashboard', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>' },
+    { name: 'Blood Glucose', route: 'glucose.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.25c-1.745 2.508-6 8.657-6 12a6 6 0 1 0 12 0c0-3.343-4.255-9.492-6-12Z" /></svg>' },
+    { name: 'Meals', route: 'meals.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5A2 2 0 0 0 3 14h18A2 2 0 0 0 19 12ZM7 12V9m5 3V8m5 4V9" /></svg>' },
+    { name: 'Exercise', route: 'exercise.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12h4l2-8 4 16 2-8h4" /></svg>' },
+    { name: 'Medications', route: 'medications.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.25 14.75l-9.5-9.5a3 3 0 0 0-4.25 4.25l9.5 9.5a3 3 0 0 0 4.25-4.25Z M9 5l-4 4 M15 15l4-4" /></svg>' },
+    { name: 'Doctors', route: 'doctors.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m-3-3h6M5 3h14A2 2 0 0121 5v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg>' },
+    { name: 'Reports', route: 'reports.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6zM13.5 3v7.5H21A7.5 7.5 0 0013.5 3z" /></svg>' },
+];
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-gray-100">
-            <nav
-                class="border-b border-gray-100 bg-white"
-            >
-                <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
-                            <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
-                                    />
-                                </Link>
+    <div class="w-full relative overflow-x-hidden min-h-screen bg-gray-50 flex">
+        
+        <!-- Mobile Sidebar Backdrop -->
+        <div v-if="showingMobileMenu" 
+             @click="showingMobileMenu = false"
+             class="fixed inset-0 z-40 bg-gray-900/50 lg:hidden min-w-0"></div>
+
+        <!-- Left Sidebar -->
+        <nav :class="[
+            'fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-100 flex flex-col transition-all duration-300 ease-in-out',
+            showingMobileMenu ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0',
+            isSidebarCollapsed ? 'lg:w-20' : 'lg:w-64'
+        ]">
+            <!-- Sidebar Header / Logo -->
+            <div :class="['flex items-center h-16 border-b border-gray-100 shrink-0 transition-all duration-300', isSidebarCollapsed ? 'justify-center px-0' : 'px-6 gap-3']">
+                <img src="/assets/images/suger-logo.png" alt="Suger" class="h-8 w-8 rounded-lg shrink-0" />
+                <span v-if="!isSidebarCollapsed || showingMobileMenu" class="text-xl font-bold text-gray-900 tracking-tight whitespace-nowrap transition-opacity duration-300">Suger</span>
+            </div>
+
+            <!-- Sidebar Navigation -->
+            <div class="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1.5 px-3">
+                <Link v-for="item in navItems" :key="item.route"
+                    :href="route(item.route)"
+                    :title="isSidebarCollapsed ? item.name : ''"
+                    v-tooltip="isSidebarCollapsed ? item.name : ''"
+                    :class="[
+                        'flex items-center rounded-xl text-sm font-medium transition-colors group relative',
+                        isSidebarCollapsed ? 'justify-center p-3' : 'px-4 py-3 gap-3',
+                        route().current(item.route) || route().current(item.route.replace('.index', '.*')) 
+                            ? 'bg-purple-50 text-purple-700' 
+                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ]">
+                    <span class="shrink-0 transition-transform duration-200" 
+                          :class="[
+                              route().current(item.route) || route().current(item.route.replace('.index', '.*')) ? 'text-purple-600' : 'text-gray-400 group-hover:text-gray-600',
+                              isSidebarCollapsed ? 'scale-110' : ''
+                          ]" 
+                          v-html="item.icon"></span>
+                    <span v-if="!isSidebarCollapsed || showingMobileMenu" class="whitespace-nowrap transition-opacity duration-300">{{ item.name }}</span>
+                    
+                    <!-- Tooltip for collapsed mode -->
+                    <div v-if="isSidebarCollapsed && !showingMobileMenu" class="absolute left-full ml-3 hidden group-hover:block bg-gray-800 text-white text-xs font-semibold px-2 py-1.5 rounded-md whitespace-nowrap z-50">
+                        {{ item.name }}
+                    </div>
+                </Link>
+            </div>
+
+            <!-- Sidebar Footer / Collapse Toggle & User Profile -->
+            <div class="border-t border-gray-100 shrink-0 p-3 flex flex-col gap-2">
+                <!-- Desktop Collapse Toggle -->
+                <button @click="toggleSidebar" class="hidden lg:flex items-center justify-center w-full p-2.5 rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-600 transition-colors">
+                    <svg v-if="!isSidebarCollapsed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" /></svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5" /></svg>
+                </button>
+
+                <Dropdown align="top-left" width="48">
+                    <template #trigger>
+                        <button :class="['flex items-center w-full p-2 rounded-xl hover:bg-gray-50 transition-colors focus:outline-none', isSidebarCollapsed ? 'justify-center' : 'gap-3 text-left']">
+                            <div class="shrink-0 w-8 h-8 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center text-sm font-bold border border-purple-200">
+                                {{ $page.props.auth.user.name?.charAt(0)?.toUpperCase() }}
                             </div>
-
-                            <!-- Navigation Links -->
-                            <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
-                            >
-                                <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
-                                <Dropdown align="right" width="48">
-                                    <template #trigger>
-                                        <span class="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {{ $page.props.auth.user.name }}
-
-                                                <svg
-                                                    class="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fill-rule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clip-rule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </template>
-
-                                    <template #content>
-                                        <DropdownLink
-                                            :href="route('profile.edit')"
-                                        >
-                                            Profile
-                                        </DropdownLink>
-                                        <DropdownLink
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </DropdownLink>
-                                    </template>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
-                            <button
-                                @click="
-                                    showingNavigationDropdown =
-                                        !showingNavigationDropdown
-                                "
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    class="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex':
-                                                !showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
-                                            'inline-flex':
-                                                showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
+                            <template v-if="!isSidebarCollapsed || showingMobileMenu">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-bold text-gray-900 truncate">{{ $page.props.auth.user.name }}</p>
+                                    <p class="text-xs text-gray-500 truncate">{{ $page.props.auth.user.email }}</p>
+                                </div>
+                                <svg class="h-4 w-4 text-gray-400 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" />
                                 </svg>
-                            </button>
-                        </div>
-                    </div>
+                            </template>
+                        </button>
+                    </template>
+                    <template #content>
+                        <DropdownLink :href="route('profile.edit')">Profile Settings</DropdownLink>
+                        <DropdownLink :href="route('logout')" method="post" as="button">Log Out</DropdownLink>
+                    </template>
+                </Dropdown>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div :class="['flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300 ease-in-out', isSidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64']">
+            
+            <!-- Mobile Top Bar -->
+            <div class="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-gray-100 shrink-0 sticky top-0 z-30 shadow-sm">
+                <div class="flex items-center gap-2">
+                    <img src="/assets/images/suger-logo.png" alt="Suger" class="h-8 w-8 rounded-lg" />
+                    <span class="text-lg font-bold text-gray-900 tracking-tight">Suger</span>
                 </div>
+                <button @click="showingMobileMenu = true" aria-label="Open menu" class="p-2 -mr-2 text-gray-500 hover:text-gray-900 rounded-lg hover:bg-gray-50 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
 
-                <!-- Responsive Navigation Menu -->
-                <div
-                    :class="{
-                        block: showingNavigationDropdown,
-                        hidden: !showingNavigationDropdown,
-                    }"
-                    class="sm:hidden"
-                >
-                    <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard')"
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
+            <!-- Page Heading (Balanced with Sidebar Header) -->
+            <header class="bg-white border-b border-gray-100 flex items-center h-16 shrink-0 z-20" v-if="$slots.header">
+                <div class="w-full px-[5px] flex items-center h-full min-w-0">
+                    <div class="w-full min-w-0">
+                        <slot name="header" />
                     </div>
-
-                    <!-- Responsive Settings Options -->
-                    <div
-                        class="border-t border-gray-200 pb-1 pt-4"
-                    >
-                        <div class="px-4">
-                            <div
-                                class="text-base font-medium text-gray-800"
-                            >
-                                {{ $page.props.auth.user.name }}
-                            </div>
-                            <div class="text-sm font-medium text-gray-500">
-                                {{ $page.props.auth.user.email }}
-                            </div>
-                        </div>
-
-                        <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')">
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                :href="route('logout')"
-                                method="post"
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
-                        </div>
-                    </div>
-                </div>
-            </nav>
-
-            <!-- Page Heading -->
-            <header
-                class="bg-white shadow"
-                v-if="$slots.header"
-            >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
                 </div>
             </header>
 
             <!-- Page Content -->
-            <main>
+            <main class="flex-1 overflow-x-hidden min-w-0 w-full mb-8">
                 <slot />
             </main>
         </div>

@@ -6,21 +6,26 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->char('public_id', 26)->unique();
+            $table->string('google_sub', 64)->unique();
+            $table->string('email', 255)->unique();
+            $table->boolean('email_verified')->default(false);
+            $table->string('name', 255)->nullable();
+            $table->string('given_name', 255)->nullable();
+            $table->string('family_name', 255)->nullable();
+            $table->string('avatar_url', 2048)->nullable();
+            $table->string('locale', 16)->nullable();
+            $table->string('timezone', 64)->default('UTC');
             $table->string('password')->nullable();
-            $table->string('google_id')->nullable()->unique();
-            $table->longText('avatar')->nullable();
+            $table->dateTime('last_login_at', 6)->nullable()->index();
             $table->rememberToken();
-            $table->timestamps();
+            $table->dateTime('created_at', 6)->nullable();
+            $table->dateTime('updated_at', 6)->nullable();
+            $table->dateTime('deleted_at', 6)->nullable()->index();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -39,9 +44,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');
