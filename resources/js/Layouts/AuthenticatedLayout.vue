@@ -15,13 +15,11 @@ const displayTime = ref(page.props.server_time ?? '');
 let _timerId = null;
 
 function _tickTime() {
-    // Parse the server time once to get an offset, then advance it client-side
     const now = new Date();
-    // Format: "Sun, 22 Mar · 20:36:24"
+    // Asia/Colombo = UTC+05:30. Add fixed offset to UTC epoch, then read back with getUTC* methods.
+    const lk = new Date(now.getTime() + (5 * 60 + 30) * 60000);
     const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    // Use Asia/Colombo offset (UTC+05:30 = +330 min)
-    const lk = new Date(now.getTime() + (5 * 60 + 30) * 60000 - now.getTimezoneOffset() * 60000);
     const d = lk.getUTCDay(), dt = String(lk.getUTCDate()).padStart(2,'0');
     const mo = months[lk.getUTCMonth()];
     const h = String(lk.getUTCHours()).padStart(2,'0');
