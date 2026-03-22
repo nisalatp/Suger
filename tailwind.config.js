@@ -12,8 +12,11 @@ export default {
 
     theme: {
         extend: {
+            colors: {
+                purple: require('tailwindcss/colors').violet,
+            },
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Public Sans', ...defaultTheme.fontFamily.sans],
             },
         },
     },

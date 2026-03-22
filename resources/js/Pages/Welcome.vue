@@ -1,5 +1,84 @@
 <script setup>
+import { ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
+
+// Theme vendor imports
+import Swiper from "swiper/bundle";
+import "swiper/css/bundle";
+import Parallax from "parallax-js";
+import Rellax from "rellax";
+import scrollCue from "scrollcue";
+
+const mobileMenuOpen = ref(false);
+
+const scrollToSection = (id, event) => {
+    event.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+    }
+    mobileMenuOpen.value = false;
+};
+
+onMounted(() => {
+    // Initialize Swiper
+    const swiperContainers = document.querySelectorAll(".swiper-container");
+    swiperContainers.forEach((swiperContainer) => {
+        const speed = swiperContainer.getAttribute("data-speed") || 400;
+        const spaceBetween = swiperContainer.getAttribute("data-space-between") || 30;
+        const paginationEnabled = swiperContainer.getAttribute("data-pagination") === "true";
+        const navigationEnabled = swiperContainer.getAttribute("data-navigation") === "true";
+        const autoplayEnabled = swiperContainer.getAttribute("data-autoplay") === "true";
+        const autoplayDelay = swiperContainer.getAttribute("data-autoplay-delay") || 3000;
+        const centerSlides = swiperContainer.getAttribute("data-center-slides") === "true";
+
+        let breakpoints = {};
+        const breakpointsData = swiperContainer.getAttribute("data-breakpoints");
+        if (breakpointsData) {
+            try { breakpoints = JSON.parse(breakpointsData); } catch (e) {}
+        }
+
+        const options = {
+            speed: parseInt(speed),
+            spaceBetween: parseInt(spaceBetween),
+            breakpoints: breakpoints,
+            slidesPerView: "auto",
+        };
+
+        if (paginationEnabled) {
+            options.pagination = {
+                el: swiperContainer.querySelector(".swiper-pagination"),
+                clickable: true,
+                dynamicBullets: true,
+            };
+        }
+
+        if (navigationEnabled) {
+            options.navigation = {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            };
+        }
+
+        if (autoplayEnabled) {
+            options.autoplay = { delay: parseInt(autoplayDelay) };
+        }
+
+        new Swiper(swiperContainer, options);
+    });
+
+    // Initialize Parallax
+    const scenes = document.querySelectorAll(".scene");
+    scenes.forEach(scene => new Parallax(scene));
+
+    // Initialize Rellax
+    if (document.querySelectorAll('.rellax').length > 0) {
+        new Rellax('.rellax');
+    }
+
+    // Initialize scrollCue
+    scrollCue.init();
+});
 
 defineProps({
     canLogin: {
@@ -17,370 +96,986 @@ defineProps({
         required: true,
     },
 });
-
-function handleImageError() {
-    document.getElementById('screenshot-container')?.classList.add('!hidden');
-    document.getElementById('docs-card')?.classList.add('!row-span-1');
-    document.getElementById('docs-card-content')?.classList.add('!flex-row');
-    document.getElementById('background')?.classList.add('!hidden');
-}
 </script>
 
 <template>
     <Head title="Welcome" />
-    <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
-        <img
-            id="background"
-            class="absolute -left-20 top-0 max-w-[877px]"
-            src="https://laravel.com/assets/img/welcome/background.svg"
-        />
-        <div
-            class="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white"
-        >
-            <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-                <header
-                    class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3"
-                >
-                    <div class="flex lg:col-start-2 lg:justify-center">
-                        <svg
-                            class="h-12 w-auto text-white lg:h-16 lg:text-[#FF2D20]"
-                            viewBox="0 0 62 65"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z"
-                                fill="currentColor"
-                            />
-                        </svg>
-                    </div>
-                    <nav v-if="canLogin" class="-mx-3 flex flex-1 justify-end">
-                        <Link
-                            v-if="$page.props.auth.user"
-                            :href="route('dashboard')"
-                            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                        >
-                            Dashboard
-                        </Link>
+    <div class="font-sans antialiased text-gray-500">
+        
+<!-- Navbar -->
+    <nav class="bg-white border-b border-gray-200 fixed top-0 w-full z-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+          <!-- Logo -->
+          <a href="index.html" class="text-xl font-semibold text-gray-900">
+            <img src="/assets/images/logo/logo.svg" alt="">
+          </a>
 
-                        <template v-else>
-                            <Link
-                                :href="route('login')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                            >
-                                Log in
-                            </Link>
+          <!-- Desktop Menu -->
+          <div class="hidden md:flex space-x-6">
+           <a href="#home" class="text-gray-700 hover:text-purple-500 scroll-smooth" onclick="scrollToSection('home', event)">Home</a>
+           
+            <a href="#features" class="text-gray-700 hover:text-purple-500 scroll-smooth" onclick="scrollToSection('features', event)">Features</a>
+            <a href="#services" class="text-gray-700 hover:text-purple-500 scroll-smooth" onclick="scrollToSection('services', event)">Services</a>
+            <a href="#testimonial" class="text-gray-700 hover:text-purple-500 scroll-smooth" onclick="scrollToSection('testimonial', event)">Testimonials</a>
+            <a href="#integrations" class="text-gray-700 hover:text-purple-500 scroll-smooth" onclick="scrollToSection('integrations', event)">Integrations</a>
+           
+          </div>
 
-                            <Link
-                                v-if="canRegister"
-                                :href="route('register')"
-                                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                            >
-                                Register
-                            </Link>
-                        </template>
-                    </nav>
-                </header>
+          <!-- Right side icons -->
+          <div class="hidden lg:flex items-center space-x-4">
+          <Link :href="route('login')" class="btn btn-outline-white">Login</Link>
+          <Link :href="route('register')" class="btn btn-primary">Create Account</Link>
+          </div>
 
-                <main class="mt-6">
-                    <div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
-                        <a
-                            href="https://laravel.com/docs"
-                            id="docs-card"
-                            class="flex flex-col items-start gap-6 overflow-hidden rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] md:row-span-3 lg:p-10 lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                        >
-                            <div
-                                id="screenshot-container"
-                                class="relative flex w-full flex-1 items-stretch"
-                            >
-                                <img
-                                    src="https://laravel.com/assets/img/welcome/docs-light.svg"
-                                    alt="Laravel documentation screenshot"
-                                    class="aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.06)] dark:hidden"
-                                    @error="handleImageError"
-                                />
-                                <img
-                                    src="https://laravel.com/assets/img/welcome/docs-dark.svg"
-                                    alt="Laravel documentation screenshot"
-                                    class="hidden aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.25)] dark:block"
-                                />
-                                <div
-                                    class="absolute -bottom-16 -left-16 h-40 w-[calc(100%+8rem)] bg-gradient-to-b from-transparent via-white to-white dark:via-zinc-900 dark:to-zinc-900"
-                                ></div>
-                            </div>
-
-                            <div
-                                class="relative flex items-center gap-6 lg:items-end"
-                            >
-                                <div
-                                    id="docs-card-content"
-                                    class="flex items-start gap-6 lg:flex-col"
-                                >
-                                    <div
-                                        class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                                    >
-                                        <svg
-                                            class="size-5 sm:size-6"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                fill="#FF2D20"
-                                                d="M23 4a1 1 0 0 0-1.447-.894L12.224 7.77a.5.5 0 0 1-.448 0L2.447 3.106A1 1 0 0 0 1 4v13.382a1.99 1.99 0 0 0 1.105 1.79l9.448 4.728c.14.065.293.1.447.1.154-.005.306-.04.447-.105l9.453-4.724a1.99 1.99 0 0 0 1.1-1.789V4ZM3 6.023a.25.25 0 0 1 .362-.223l7.5 3.75a.251.251 0 0 1 .138.223v11.2a.25.25 0 0 1-.362.224l-7.5-3.75a.25.25 0 0 1-.138-.22V6.023Zm18 11.2a.25.25 0 0 1-.138.224l-7.5 3.75a.249.249 0 0 1-.329-.099.249.249 0 0 1-.033-.12V9.772a.251.251 0 0 1 .138-.224l7.5-3.75a.25.25 0 0 1 .362.224v11.2Z"
-                                            />
-                                            <path
-                                                fill="#FF2D20"
-                                                d="m3.55 1.893 8 4.048a1.008 1.008 0 0 0 .9 0l8-4.048a1 1 0 0 0-.9-1.785l-7.322 3.706a.506.506 0 0 1-.452 0L4.454.108a1 1 0 0 0-.9 1.785H3.55Z"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <div class="pt-3 sm:pt-5 lg:pt-0">
-                                        <h2
-                                            class="text-xl font-semibold text-black dark:text-white"
-                                        >
-                                            Documentation
-                                        </h2>
-
-                                        <p class="mt-4 text-sm/relaxed">
-                                            Laravel has wonderful documentation
-                                            covering every aspect of the
-                                            framework. Whether you are a
-                                            newcomer or have prior experience
-                                            with Laravel, we recommend reading
-                                            our documentation from beginning to
-                                            end.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <svg
-                                    class="size-6 shrink-0 stroke-[#FF2D20]"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke-width="1.5"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                    />
-                                </svg>
-                            </div>
-                        </a>
-
-                        <a
-                            href="https://laracasts.com"
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M24 8.25a.5.5 0 0 0-.5-.5H.5a.5.5 0 0 0-.5.5v12a2.5 2.5 0 0 0 2.5 2.5h19a2.5 2.5 0 0 0 2.5-2.5v-12Zm-7.765 5.868a1.221 1.221 0 0 1 0 2.264l-6.626 2.776A1.153 1.153 0 0 1 8 18.123v-5.746a1.151 1.151 0 0 1 1.609-1.035l6.626 2.776ZM19.564 1.677a.25.25 0 0 0-.177-.427H15.6a.106.106 0 0 0-.072.03l-4.54 4.543a.25.25 0 0 0 .177.427h3.783c.027 0 .054-.01.073-.03l4.543-4.543ZM22.071 1.318a.047.047 0 0 0-.045.013l-4.492 4.492a.249.249 0 0 0 .038.385.25.25 0 0 0 .14.042h5.784a.5.5 0 0 0 .5-.5v-2a2.5 2.5 0 0 0-1.925-2.432ZM13.014 1.677a.25.25 0 0 0-.178-.427H9.101a.106.106 0 0 0-.073.03l-4.54 4.543a.25.25 0 0 0 .177.427H8.4a.106.106 0 0 0 .073-.03l4.54-4.543ZM6.513 1.677a.25.25 0 0 0-.177-.427H2.5A2.5 2.5 0 0 0 0 3.75v2a.5.5 0 0 0 .5.5h1.4a.106.106 0 0 0 .073-.03l4.54-4.543Z"
-                                        />
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Laracasts
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laracasts offers thousands of video
-                                    tutorials on Laravel, PHP, and JavaScript
-                                    development. Check them out, see for
-                                    yourself, and massively level up your
-                                    development skills in the process.
-                                </p>
-                            </div>
-
-                            <svg
-                                class="size-6 shrink-0 self-center stroke-[#FF2D20]"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                />
-                            </svg>
-                        </a>
-
-                        <a
-                            href="https://laravel-news.com"
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M8.75 4.5H5.5c-.69 0-1.25.56-1.25 1.25v4.75c0 .69.56 1.25 1.25 1.25h3.25c.69 0 1.25-.56 1.25-1.25V5.75c0-.69-.56-1.25-1.25-1.25Z"
-                                        />
-                                        <path
-                                            d="M24 10a3 3 0 0 0-3-3h-2V2.5a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2V20a3.5 3.5 0 0 0 3.5 3.5h17A3.5 3.5 0 0 0 24 20V10ZM3.5 21.5A1.5 1.5 0 0 1 2 20V3a.5.5 0 0 1 .5-.5h14a.5.5 0 0 1 .5.5v17c0 .295.037.588.11.874a.5.5 0 0 1-.484.625L3.5 21.5ZM22 20a1.5 1.5 0 1 1-3 0V9.5a.5.5 0 0 1 .5-.5H21a1 1 0 0 1 1 1v10Z"
-                                        />
-                                        <path
-                                            d="M12.751 6.047h2a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-2A.75.75 0 0 1 12 7.3v-.5a.75.75 0 0 1 .751-.753ZM12.751 10.047h2a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-2A.75.75 0 0 1 12 11.3v-.5a.75.75 0 0 1 .751-.753ZM4.751 14.047h10a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-10A.75.75 0 0 1 4 15.3v-.5a.75.75 0 0 1 .751-.753ZM4.75 18.047h7.5a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-7.5A.75.75 0 0 1 4 19.3v-.5a.75.75 0 0 1 .75-.753Z"
-                                        />
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Laravel News
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laravel News is a community driven portal
-                                    and newsletter aggregating all of the latest
-                                    and most important news in the Laravel
-                                    ecosystem, including new package releases
-                                    and tutorials.
-                                </p>
-                            </div>
-
-                            <svg
-                                class="size-6 shrink-0 self-center stroke-[#FF2D20]"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                />
-                            </svg>
-                        </a>
-
-                        <div
-                            class="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800"
-                        >
-                            <div
-                                class="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16"
-                            >
-                                <svg
-                                    class="size-5 sm:size-6"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <g fill="#FF2D20">
-                                        <path
-                                            d="M16.597 12.635a.247.247 0 0 0-.08-.237 2.234 2.234 0 0 1-.769-1.68c.001-.195.03-.39.084-.578a.25.25 0 0 0-.09-.267 8.8 8.8 0 0 0-4.826-1.66.25.25 0 0 0-.268.181 2.5 2.5 0 0 1-2.4 1.824.045.045 0 0 0-.045.037 12.255 12.255 0 0 0-.093 3.86.251.251 0 0 0 .208.214c2.22.366 4.367 1.08 6.362 2.118a.252.252 0 0 0 .32-.079 10.09 10.09 0 0 0 1.597-3.733ZM13.616 17.968a.25.25 0 0 0-.063-.407A19.697 19.697 0 0 0 8.91 15.98a.25.25 0 0 0-.287.325c.151.455.334.898.548 1.328.437.827.981 1.594 1.619 2.28a.249.249 0 0 0 .32.044 29.13 29.13 0 0 0 2.506-1.99ZM6.303 14.105a.25.25 0 0 0 .265-.274 13.048 13.048 0 0 1 .205-4.045.062.062 0 0 0-.022-.07 2.5 2.5 0 0 1-.777-.982.25.25 0 0 0-.271-.149 11 11 0 0 0-5.6 2.815.255.255 0 0 0-.075.163c-.008.135-.02.27-.02.406.002.8.084 1.598.246 2.381a.25.25 0 0 0 .303.193 19.924 19.924 0 0 1 5.746-.438ZM9.228 20.914a.25.25 0 0 0 .1-.393 11.53 11.53 0 0 1-1.5-2.22 12.238 12.238 0 0 1-.91-2.465.248.248 0 0 0-.22-.187 18.876 18.876 0 0 0-5.69.33.249.249 0 0 0-.179.336c.838 2.142 2.272 4 4.132 5.353a.254.254 0 0 0 .15.048c1.41-.01 2.807-.282 4.117-.802ZM18.93 12.957l-.005-.008a.25.25 0 0 0-.268-.082 2.21 2.21 0 0 1-.41.081.25.25 0 0 0-.217.2c-.582 2.66-2.127 5.35-5.75 7.843a.248.248 0 0 0-.09.299.25.25 0 0 0 .065.091 28.703 28.703 0 0 0 2.662 2.12.246.246 0 0 0 .209.037c2.579-.701 4.85-2.242 6.456-4.378a.25.25 0 0 0 .048-.189 13.51 13.51 0 0 0-2.7-6.014ZM5.702 7.058a.254.254 0 0 0 .2-.165A2.488 2.488 0 0 1 7.98 5.245a.093.093 0 0 0 .078-.062 19.734 19.734 0 0 1 3.055-4.74.25.25 0 0 0-.21-.41 12.009 12.009 0 0 0-10.4 8.558.25.25 0 0 0 .373.281 12.912 12.912 0 0 1 4.826-1.814ZM10.773 22.052a.25.25 0 0 0-.28-.046c-.758.356-1.55.635-2.365.833a.25.25 0 0 0-.022.48c1.252.43 2.568.65 3.893.65.1 0 .2 0 .3-.008a.25.25 0 0 0 .147-.444c-.526-.424-1.1-.917-1.673-1.465ZM18.744 8.436a.249.249 0 0 0 .15.228 2.246 2.246 0 0 1 1.352 2.054c0 .337-.08.67-.23.972a.25.25 0 0 0 .042.28l.007.009a15.016 15.016 0 0 1 2.52 4.6.25.25 0 0 0 .37.132.25.25 0 0 0 .096-.114c.623-1.464.944-3.039.945-4.63a12.005 12.005 0 0 0-5.78-10.258.25.25 0 0 0-.373.274c.547 2.109.85 4.274.901 6.453ZM9.61 5.38a.25.25 0 0 0 .08.31c.34.24.616.561.8.935a.25.25 0 0 0 .3.127.631.631 0 0 1 .206-.034c2.054.078 4.036.772 5.69 1.991a.251.251 0 0 0 .267.024c.046-.024.093-.047.141-.067a.25.25 0 0 0 .151-.23A29.98 29.98 0 0 0 15.957.764a.25.25 0 0 0-.16-.164 11.924 11.924 0 0 0-2.21-.518.252.252 0 0 0-.215.076A22.456 22.456 0 0 0 9.61 5.38Z"
-                                        />
-                                    </g>
-                                </svg>
-                            </div>
-
-                            <div class="pt-3 sm:pt-5">
-                                <h2
-                                    class="text-xl font-semibold text-black dark:text-white"
-                                >
-                                    Vibrant Ecosystem
-                                </h2>
-
-                                <p class="mt-4 text-sm/relaxed">
-                                    Laravel's robust library of first-party
-                                    tools and libraries, such as
-                                    <a
-                                        href="https://forge.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white dark:focus-visible:ring-[#FF2D20]"
-                                        >Forge</a
-                                    >,
-                                    <a
-                                        href="https://vapor.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Vapor</a
-                                    >,
-                                    <a
-                                        href="https://nova.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Nova</a
-                                    >,
-                                    <a
-                                        href="https://envoyer.io"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Envoyer</a
-                                    >, and
-                                    <a
-                                        href="https://herd.laravel.com"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Herd</a
-                                    >
-                                    help you take your projects to the next
-                                    level. Pair them with powerful open source
-                                    libraries like
-                                    <a
-                                        href="https://laravel.com/docs/billing"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Cashier</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/dusk"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Dusk</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/broadcasting"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Echo</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/horizon"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Horizon</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/sanctum"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Sanctum</a
-                                    >,
-                                    <a
-                                        href="https://laravel.com/docs/telescope"
-                                        class="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                        >Telescope</a
-                                    >, and more.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-
-                <footer
-                    class="py-16 text-center text-sm text-black dark:text-white/70"
-                >
-                    Laravel v{{ laravelVersion }} (PHP v{{ phpVersion }})
-                </footer>
-            </div>
+          <!-- Mobile Menu Button -->
+          <button
+            class="md:hidden text-gray-700 focus:outline-none"
+            @click="mobileMenuOpen = !mobileMenuOpen"
+          >
+            <svg
+              v-show="!mobileMenuOpen"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg
+              v-show="mobileMenuOpen"
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div v-show="mobileMenuOpen" class="md:hidden bg-white border-t border-gray-200">
+        <div class="space-y-1 px-4 py-3">
+            <a href="#home" class="block text-gray-700 hover:text-purple-500 py-2 scroll-smooth" onclick="scrollToSection('home', event)">Home</a>
+            <a href="#features" class="block text-gray-700 hover:text-purple-500 py-2 scroll-smooth" onclick="scrollToSection('features', event)">Features</a>
+            <a href="#services" class="block text-gray-700 hover:text-purple-500 py-2 scroll-smooth" onclick="scrollToSection('services', event)">Services</a>
+            <a href="#testimonial" class="block text-gray-700 hover:text-purple-500 py-2 scroll-smooth" onclick="scrollToSection('testimonial', event)">Testimonials</a>
+            <a href="#integrations" class="block text-gray-700 hover:text-purple-500 py-2 scroll-smooth" onclick="scrollToSection('integrations', event)">Integrations</a>
+              
+        </div>
+      </div>
+    </nav>
+
+    <main class="pt-16 ">
+     <section class="lg:py-24 py-12" id="home">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+      <div class="grid lg:grid-cols-12 grid-cols-1 gap-8 items-center">
+        <div class=" lg:col-start-1 lg:col-end-6 col-span-12 text-center sm:text-left">
+          <span class="badge bg-white border border-purple-500 rounded-full text-purple-500 px-4 ">New: Our Live collaborative just landed</span>
+
+         <div class="my-6">
+          <h1 class="lg:text-[3.4rem] text-3xl lg:leading-14 mb-4 font-bold ">Build your next project even faster.</h1>
+          <p class="text-lg ">Block makes it easy to get your most important work done. Increase efficiency to deliver result & hit your goal on every project.</p>
+          <div class="my-6 gap-3 flex justify-center sm:justify-start">
+            <a href="#" class="btn btn-primary">Try for Free</a>
+            <a href="#" class="btn btn-outline-white">Book a Demo</a>
+          </div>
+        </div>
+          <div class="flex md:flex-row flex-col items-center  gap-6">
+            <div class="flex items-center md:justify-center gap-3">
+              <span class="h-9 w-9 border border-gray-200 rounded-lg flex items-center justify-center px-3 py-2">
+                <i class="ti ti-credit-card text-purple-500 text-xl "></i>
+              </span>
+              <span>No credit card required</span>
+            </div>
+            <div class="flex items-center  md:justify-center gap-3">
+            <span class="h-9 w-9 border border-gray-200 rounded-lg flex items-center justify-center px-3 py-2">
+              <i class="ti ti-cash-banknote text-purple-500 text-xl "></i>
+            </span>
+            <span>Free until upgrade</span></div>
+
+</div>
+        </div>
+        <div class="lg:col-start-7 lg:col-end-14 col-span-12">
+          <div class="relative">
+                        <div class="bg-gray-100 md:p-4 p-2 rounded-xl border border-gray-200 scene" data-relative-input="true">
+                           <div data-depth="0.09">
+                              <figure  >
+                                 <img src="/assets/images/app-screen-1.jpg" alt="landing" class="w-full rounded-xl shadow border border-gray-200" />
+                              </figure>
+                           </div>
+                        </div>
+                        <div class="absolute top-50 -mt-10 left-0 -ms-4 hidden lg:block">
+                           <div class="badge bg-cyan-500 text-white   rounded-full">Developer</div>
+                           <div class="absolute top-0 end-0 -mt-3 -mr-3">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                 <path
+                                    d="M22.3722 2.21902C22.4794 2.32632 22.5515 2.46361 22.5791 2.61278C22.6067 2.76194 22.5884 2.91597 22.5267 3.05452L14.0412 22.1465C13.9819 22.28 13.8849 22.3933 13.7621 22.4725C13.6393 22.5517 13.4961 22.5933 13.35 22.5921C13.2039 22.591 13.0613 22.5473 12.9397 22.4662C12.8182 22.3852 12.7229 22.2704 12.6657 22.136L9.60416 14.987L2.45366 11.924C2.31974 11.8664 2.20552 11.771 2.12495 11.6496C2.04439 11.5281 2.00097 11.3857 2.00002 11.24C1.99906 11.0942 2.04061 10.9513 2.11958 10.8288C2.19854 10.7062 2.31151 10.6094 2.44466 10.55L21.5367 2.06452C21.675 2.00309 21.8287 1.98497 21.9776 2.01255C22.1265 2.04012 22.265 2.1121 22.3722 2.21902Z"
+                                    fill="#0DCAF0" />
+                              </svg>
+                           </div>
+                        </div>
+                        <div class="absolute bottom-50 mb-n10 left-0 hidden lg:block">
+                           <div class="badge bg-green-500 text-white  rounded-full">Manager</div>
+                           <div class="absolute top-0 end-0 -mt-3 -mr-3">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                 <path
+                                    d="M22.3722 2.21902C22.4794 2.32632 22.5515 2.46361 22.5791 2.61278C22.6067 2.76194 22.5884 2.91597 22.5267 3.05452L14.0412 22.1465C13.9819 22.28 13.8849 22.3933 13.7621 22.4725C13.6393 22.5517 13.4961 22.5932 13.35 22.5921C13.2039 22.591 13.0613 22.5473 12.9397 22.4662C12.8182 22.3852 12.7229 22.2704 12.6657 22.136L9.60416 14.987L2.45366 11.924C2.31974 11.8664 2.20552 11.771 2.12495 11.6496C2.04439 11.5281 2.00097 11.3857 2.00002 11.24C1.99906 11.0942 2.04061 10.9513 2.11958 10.8288C2.19854 10.7062 2.31151 10.6094 2.44466 10.55L21.5367 2.06452C21.675 2.00309 21.8287 1.98497 21.9776 2.01255C22.1265 2.04012 22.265 2.1121 22.3722 2.21902Z"
+                                    fill="#198754" />
+                              </svg>
+                           </div>
+                        </div>
+                        <div class="absolute bottom-0 me-n8 end-0 hidden lg:block">
+                           <div class="badge bg-red-500 text-white   rounded-full">Designer</div>
+                           <div class="absolute top-0 left-0 -mt-3 -ml-3">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                 <path
+                                    d="M2.21946 2.21902C2.11223 2.32632 2.04007 2.46361 2.01248 2.61278C1.9849 2.76194 2.0032 2.91597 2.06496 3.05452L10.5505 22.1465C10.6097 22.28 10.7067 22.3933 10.8295 22.4725C10.9523 22.5517 11.0956 22.5933 11.2416 22.5921C11.3877 22.591 11.5303 22.5473 11.6519 22.4662C11.7735 22.3852 11.8687 22.2704 11.926 22.136L14.9875 14.987L22.138 11.924C22.2719 11.8664 22.3861 11.771 22.4667 11.6496C22.5472 11.5281 22.5906 11.3857 22.5916 11.24C22.5926 11.0942 22.551 10.9513 22.472 10.8288C22.3931 10.7062 22.2801 10.6094 22.147 10.55L3.05496 2.06452C2.91659 2.00309 2.76287 1.98497 2.61402 2.01255C2.46516 2.04012 2.32664 2.1121 2.21946 2.21902Z"
+                                    fill="#DC3545" />
+                              </svg>
+                           </div>
+                        </div>
+                        <div class="absolute top-0 mt-10 end-0 hidden lg:block">
+                           <div class="badge bg-purple-500 text-white   rounded-full">User</div>
+                           <div class="absolute top-0 left-0 -mt-3 -ml-3">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                 <path
+                                    d="M2.21946 2.21902C2.11223 2.32632 2.04007 2.46361 2.01248 2.61278C1.9849 2.76194 2.0032 2.91597 2.06496 3.05452L10.5505 22.1465C10.6097 22.28 10.7067 22.3933 10.8295 22.4725C10.9523 22.5517 11.0956 22.5933 11.2416 22.5921C11.3877 22.591 11.5303 22.5473 11.6519 22.4662C11.7735 22.3852 11.8687 22.2704 11.926 22.136L14.9875 14.987L22.138 11.924C22.2719 11.8664 22.3861 11.771 22.4667 11.6496C22.5472 11.5281 22.5906 11.3857 22.5916 11.24C22.5926 11.0942 22.551 10.9513 22.472 10.8288C22.3931 10.7062 22.2801 10.6094 22.147 10.55L3.05496 2.06452C2.91659 2.00309 2.76287 1.98497 2.61402 2.01255C2.46516 2.04012 2.32664 2.1121 2.21946 2.21902Z"
+                                    fill="#8B3DFF" />
+                              </svg>
+                           </div>
+                        </div>
+                     </div>
+        </div>
+
+      </div>
+      </div>
+
+     </section>
+       <!--Trusted worldwide start-->
+         <div class="lg:py-16 py-12" >
+       
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+               <div class="grid grid-cols-12">
+                  <div class="col-span-12 lg:col-span-10 lg:col-start-2">
+                     <div class="text-center mb-8 lg:mb-10">
+                        <small class="uppercase tracking-wider font-semibold ">
+                           Trusted by
+                           <span class="font-bold text-gray-900">20,000+</span>
+                           organizations worldwide
+                        </small>
+                     </div>
+                     <div
+                        class="swiper-container swiper" style="--swiper-theme-color: #8B3DFF;"
+                        id="swiper-1"
+                        data-pagination-type=""
+                        data-speed="400"
+                        data-space-between="100"
+                        data-pagination="true"
+                        data-navigation="false"
+                        data-autoplay="true"
+                        data-autoplay-delay="3000"
+                        data-breakpoints='{"390": {"slidesPerView": 2}, "768": {"slidesPerView": 3}, "1024": {"slidesPerView": 5}}'>
+                        <div class="swiper-wrapper pb-12">
+                           <div class="swiper-slide">
+                              <figure class="text-center">
+                                 <img src="/assets/images/client-logo/clients-logo-1.svg" alt="logo" />
+                              </figure>
+                           </div>
+                           <div class="swiper-slide">
+                              <figure class="text-center">
+                                 <img src="/assets/images/client-logo/clients-logo-2.svg" alt="logo" />
+                              </figure>
+                           </div>
+                           <div class="swiper-slide">
+                              <figure class="text-center">
+                                 <img src="/assets/images/client-logo/clients-logo-3.svg" alt="logo" />
+                              </figure>
+                           </div>
+                           <div class="swiper-slide">
+                              <figure class="text-center">
+                                 <img src="/assets/images/client-logo/clients-logo-4.svg" alt="logo" />
+                              </figure>
+                           </div>
+                           <div class="swiper-slide">
+                              <figure class="text-center">
+                                 <img src="/assets/images/client-logo/clients-logo-5.svg" alt="logo" />
+                              </figure>
+                           </div>
+                           <!-- Add more slides as needed -->
+                        </div>
+                        <!-- Add Pagination -->
+                        <div class="swiper-pagination"></div>
+                        <!-- Add Navigation -->
+                        <div class="swiper-navigation">
+                           <div class="swiper-button-next"></div>
+                           <div class="swiper-button-prev"></div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <!--Trusted worldwide end-->
+          <!--Features start-->
+         <section class="lg:py-20 py-5" id="features">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+               <div class="grid grid-cols-12 ">
+                  <div class="lg:col-span-8 lg:col-start-3 col-span-12">
+                     <div class="text-center mb-6 lg:mb-14">
+                        <small class="text-purple-500 uppercase tracking-wider font-semibold">features</small>
+                        <h2 class="my-3 text-3xl">Features to make you stand out</h2>
+                        <p class="mb-0 text-xl">Manage your projects from start to finish. With all of your projects in Block, you’ll always know who’s doing what, by when.</p>
+                     </div>
+                  </div>
+               </div>
+               <div class="grid grid-cols-12 gap-10">
+                  <div class="lg:col-span-4 md:col-span-6 col-span-12">
+                     <div class="flex flex-col  items-center md:items-start text-center md:text-left" >
+                        <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-lg flex items-center justify-center mb-5 border border-purple-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-square-rounded-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 12l2 2l4 -4" /><path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z" /></svg>
+                        </div>
+
+                        <h4 class="text-lg mb-2">Tasks</h4>
+                        <p class="mb-0">Break work into manageable pieces for you and your team. Dui erat malesuada diam.</p>
+                     </div>
+                  </div>
+                      <div class="lg:col-span-4 md:col-span-6 col-span-12">
+                     <div class="flex flex-col  items-center md:items-start text-center md:text-left" >
+                        <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-lg flex items-center justify-center mb-5 border border-purple-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-flag-3"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 14h14l-4.5 -4.5l4.5 -4.5h-14v16" /></svg>
+                        </div>
+
+                         <h4 class="text-lg mb-2">Milestones</h4>
+                        <p class="mb-0">Visualise significant checkpoints in your project to measure and share progress.</p>
+                     </div>
+                  </div>
+                      <div class="lg:col-span-4 md:col-span-6 col-span-12">
+                     <div class="flex flex-col  items-center md:items-start text-center md:text-left" >
+                        <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-lg flex items-center justify-center mb-5 border border-purple-400">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-clock"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" /><path d="M12 7v5l3 3" /></svg>
+                        </div>
+
+                        <h4 class="text-lg mb-2">Due dates and times</h4>
+                        <p class="mb-0">Specify the date and time something is due so everyone’s working off the same deadline.</p>
+                     </div>
+                  </div>
+                      <div class="lg:col-span-4 md:col-span-6 col-span-12">
+                     <div class="flex flex-col  items-center md:items-start text-center md:text-left" >
+                        <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-lg flex items-center justify-center mb-5 border border-purple-400">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-article"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M7 8h10" /><path d="M7 12h10" /><path d="M7 16h10" /></svg>
+                        </div>
+
+                         <h4 class="text-lg mb-2">Custom templates</h4>
+                        <p class="mb-0">Create your own project templates so your team can quickly and easily kick off work.</p>
+                     </div>
+                  </div>
+                      <div class="lg:col-span-4 md:col-span-6 col-span-12">
+                     <div class="flex flex-col  items-center md:items-start text-center md:text-left" >
+                        <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-lg flex items-center justify-center mb-5 border border-purple-400">
+                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-paperclip"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 7l-6.5 6.5a1.5 1.5 0 0 0 3 3l6.5 -6.5a3 3 0 0 0 -6 -6l-6.5 6.5a4.5 4.5 0 0 0 9 9l6.5 -6.5" /></svg>
+                        </div>
+
+                         <h4 class="text-lg mb-2">Attachments</h4>
+                        <p class="mb-0">Add files from your computer, Dropbox, Box, or Google Drive to any task or conversation.</p>
+                     </div>
+                  </div>
+                      <div class="lg:col-span-4 md:col-span-6 col-span-12">
+                     <div class="flex flex-col  items-center md:items-start text-center md:text-left" >
+                        <div class="w-12 h-12 bg-purple-100 text-purple-500 rounded-lg flex items-center justify-center mb-5 border border-purple-400">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-users"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" /><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></svg>
+                        </div>
+
+                         <h4 class="text-lg mb-2">Teammate</h4>
+                        <p class="mb-0">Understand teammate workloads by viewing tasks assigned to them.</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </section>
+         <!--Features end-->
+       <!--Visualize & plan start-->
+         <section class="lg:py-20 py-8" id="services">
+           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+               <div class="grid grid-cols-12 items-center gap-8">
+                  <div class="lg:col-span-5 md:col-span-6 col-span-12" >
+                     <div>
+                        <small class="text-purple-500 uppercase tracking-widest font-semibold">Visualize & plan</small>
+                        <div class="mb-6 mt-6">
+                           <h2 class="mb-3 text-3xl">Build the perfect workflow for every project.</h2>
+                           <p class="mb-0 text-xl">Track your entire project from start to finish with beautiful views that make project planning a breeze.</p>
+                        </div>
+
+                        <a href="#" class="text-purple-500 font-semibold inline-flex items-center hover:underline gap-3">
+                           Learn More
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M15 16l4 -4" /><path d="M15 8l4 4" /></svg>
+                        </a>
+                     </div>
+                  </div>
+                  <div class="lg:col-start-7 lg:col-end-14 md:col-span-6 col-span-12" >
+                     <div class="relative rellax" data-rellax-percentage="1" data-rellax-speed="0.8" data-disable-parallax-down="md">
+                        <figure>
+                           <img src="/assets/images/saas-img-1.jpg" alt="landing" class="img-fluid rounded-xl" />
+                        </figure>
+                        <div class="flex-col absolute bottom-0 lg:mx-4 mb-10 flex items-center justify-between ms-2">
+                           <div
+                              class="w-full flex items-center p-2 justify-between bg-white mb-2 rounded-xl ms-2 lg:ms-7 rellax"
+                              data-rellax-percentage="0.4"
+                              data-rellax-speed="0.4"
+                              data-disable-parallax-down="md">
+                              <div class="flex items-center">
+                                 <img src="/assets/images/avatar/avatar-1.jpg" alt="avatar" class="h-10 w-10 rounded-full me-2" />
+                                 <h6 class="mb-0 text-truncate">Jitu Doe</h6>
+                              </div>
+                              <div>
+                                 <div class="lg:ms-7 lg:ps-6">
+                                    <div class="badge bg-purple-200 text-purple-700">Designer</div>
+                                 </div>
+                              </div>
+                           </div>
+                           <div
+                              class="w-full flex items-center p-2 justify-between bg-white mb-2 rounded-xl rellax"
+                              data-rellax-percentage="0.5"
+                              data-rellax-speed="0.5"
+                              data-disable-parallax-down="md">
+                              <div class="flex items-center">
+                                 <img src="/assets/images/avatar/avatar-2.jpg" alt="avatar" class="h-10 w-10 rounded-full me-2" />
+                                 <h6 class="mb-0 text-truncate">Anita Par</h6>
+                              </div>
+                              <div>
+                                 <div class="lg:ms-7 lg:ps-6">
+                                    <div class="badge bg-cyan-200 text-cyan-700">UI Developer</div>
+                                 </div>
+                              </div>
+                           </div>
+                           <div
+                              class="w-full flex items-center p-2 justify-between bg-white mb-2 rounded-xl rellax ms-4 lg:ms-7"
+                              data-rellax-percentage="0.6"
+                              data-rellax-speed="0.6"
+                              data-disable-parallax-down="md">
+                              <div class="flex items-center">
+                                 <img src="/assets/images/avatar/avatar-4.jpg" alt="avatar" class="h-10 w-10 rounded-full me-2" />
+                                 <h6 class="mb-0 text-truncate">Sandip</h6>
+                              </div>
+                              <div>
+                                 <div class="lg:ms-7 lg:ps-6">
+                                    <div class="badge bg-green-200 text-green-700">Stack Developer</div>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               </div>
+          
+         </section>
+         <!--Collaborate start-->
+         <section class="lg:py-20 py-8" >
+           <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+               <div class="grid grid-cols-12 items-center gap-6">
+                  <div class="md:col-span-6 col-span-12 lg:order-2 order-1" >
+                     <div class="relative rellax mb-7 lg:mb-0" data-rellax-percentage="1" data-rellax-speed="0.8" data-disable-parallax-down="md">
+                        <figure>
+                           <img src="/assets/images/saas-img-2.jpg" alt="landing" class="img-fluid rounded-xl" />
+                        </figure>
+                        <div class="flex flex-col absolute bottom-0 mb-8 mx-4">
+                           <img
+                              src="/assets/images/avatar/avatar-1.jpg"
+                              alt="avatar"
+                              class="h-12 w-12 rounded-full border-2 border-white   rellax"
+                              data-rellax-percentage="0.4"
+                              data-rellax-speed="0.4"
+                              data-disable-parallax-down="md" />
+                           <img
+                              src="/assets/images/avatar/avatar-2.jpg"
+                              alt="avatar"
+                              class="h-12 w-12 rounded-full border-2 border-white   rellax"
+                              data-rellax-percentage="0.5"
+                              data-rellax-speed="0.5"
+                              data-disable-parallax-down="md" />
+                           <img
+                              src="/assets/images/avatar/avatar-3.jpg"
+                              alt="avatar"
+                              class="h-12 w-12 rounded-full border-2 border-white  rellax"
+                              data-rellax-percentage="0.6"
+                              data-rellax-speed="0.6"
+                              data-disable-parallax-down="md" />
+                        </div>
+                     </div>
+                  </div>
+                  <div class="lg:col-start-8 lg:col-end-14 md:col-span-6 col-span-12 lg:order-2 order-1" >
+                     <div class="mt-md-5">
+                        <small class="text-purple-500 uppercase tracking-widest font-semibold">Collaborate</small>
+                        <div class="mb-6 mt-6">
+                           <h2 class="mb-3 text-3xl">Move team ideas to action, faster.</h2>
+                           <p class=" mb-0 text-xl">Collaborate and build total alignment on your project by adding comments to any task or document.</p>
+                        </div>
+                        <ul class=" mb-5">
+                           <li class="mb-2 flex">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
+                              <span class="ms-2">Fusce ultricies velit fel dignissim</span>
+                           </li>
+                           <li class="mb-2 flex">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
+                              <span class="ms-2">Suspendisse potenti. Mauris et ipsum odio.</span>
+                           </li>
+                           <li class="mb-2 flex">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="icon icon-tabler icons-tabler-filled icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" /></svg>
+                              <span class="ms-2">Pellentesque imperdiet blandit pretium.</span>
+                           </li>
+                        </ul>
+
+                        <a href="#" class="text-purple-500 font-semibold inline-flex items-center hover:underline gap-3">
+                           Learn More
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M15 16l4 -4" /><path d="M15 8l4 4" /></svg>
+                        </a>
+                     </div>
+                  </div>
+               </div>
+          </div>
+         </section>
+         <!--Collaborate end-->
+
+         <!--Visualize & plan end-->
+           <!--Testimonial start-->
+         <section class="bg-gray-50 lg:py-16 py-8"  id="testimonial">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+               <div class="grid grid-cols-12 mb-10">
+                  <div class="col-span-12">
+                     <div class="text-center">
+                        <small class="text-purple-500 uppercase tracking-wider font-semibold">Testimonial</small>
+                        <h2 class="mt-3 mb-0 text-3xl">Our happy customer love us</h2>
+                     </div>
+                  </div>
+               </div>
+               <div class="grid grid-cols-12">
+                  <div class="col-span-10 col-start-2">
+                     <div
+                        class="swiper-container swiper" style="--swiper-theme-color: #8B3DFF;"
+                        
+                        id="swiper-1"
+                        data-pagination-type=""
+                        data-speed="400"
+                        data-space-between="100"
+                        data-pagination="true"
+                        data-navigation="false"
+                        data-autoplay="true"
+                        data-autoplay-delay="3000"
+                        data-breakpoints='{"480": {"slidesPerView": 1}, "768": {"slidesPerView": 1}, "1024": {"slidesPerView": 1}}'>
+                        <div class="swiper-wrapper pb-6">
+                           <div class="swiper-slide">
+                              <div class="card">
+                                 <div class="grid grid-cols-12 items-center gap-6">
+                                    <div class="xl:col-span-4 lg:col-span-5 col-span-12 overflow-hidden hidden lg:block">
+                                       <img src="/assets/images/testimonial/testimonial-img-1.jpg" class="w-full rounded-xl" alt="testimonials" />
+                                    </div>
+                                    <div class="xl:col-span-8 lg:col-span-7 col-span-12">
+                                       <div class="card-body p-4 px-xl-0">
+                                          <div class="mb-6 text-inverse">
+                                             <img src="/assets/images/client-logo/logoipsum-3.svg" alt="ipsum" />
+                                          </div>
+                                          <p class="card-text text-lg mb-7">
+                                             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare."
+                                          </p>
+
+                                          <h5 class="mb-0">Katherine Moss</h5>
+                                          <small class="text-body-tertiary">Operational Manager at Block Studio</small>
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                           <div class="swiper-slide">
+                              <div class="card">
+                                 <div class="grid grid-cols-12 items-center gap-6">
+                                    <div class="xl:col-span-4 lg:col-span-5 col-span-12 overflow-hidden hidden lg:block">
+                                       <img src="/assets/images/testimonial/testimonial-img-2.jpg" class="w-full rounded-xl" alt="testimonials" />
+                                    </div>
+                                    <div class="xl:col-span-8 lg:col-span-7 col-span-12">
+                                       <div class="card-body p-4 px-xl-0">
+                                          <div class="mb-6 text-inverse">
+                                             <img src="/assets/images/client-logo/logoipsum-2.svg" alt="ipsum" />
+                                          </div>
+                                          <p class="card-text text-lg mb-7">
+                                             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare."
+                                          </p>
+
+                                          <h5 class="mb-0">Katherine Moss</h5>
+                                          <small class="text-body-tertiary">Operational Manager at Block Studio</small>
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                           <div class="swiper-slide">
+                              <div class="card">
+                                 <div class="grid grid-cols-12 items-center gap-6">
+                                    <div class="xl:col-span-4 lg:col-span-5 col-span-12 overflow-hidden hidden lg:block">
+                                       <img src="/assets/images/testimonial/testimonial-img-3.jpg" class="w-full rounded-xl" alt="testimonials" />
+                                    </div>
+                                    <div class="xl:col-span-8 lg:col-span-7 col-span-12">
+                                       <div class="card-body p-4 px-xl-0">
+                                          <div class="mb-6 text-inverse">
+                                             <img src="/assets/images/client-logo/logoipsum-1.svg" alt="ipsum" />
+                                          </div>
+                                          <p class="card-text text-lg mb-7">
+                                             "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse varius enim in eros elementum tristique. Duis cursus, mi quis viverra ornare."
+                                          </p>
+
+                                          <h5 class="mb-0">Katherine Moss</h5>
+                                          <small class="text-body-tertiary">Operational Manager at Block Studio</small>
+                                       </div>
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+                           <!-- Add more slides as needed -->
+                        </div>
+                        <!-- Add Pagination -->
+                        <div class="swiper-pagination"></div>
+                        <!-- Add Navigation -->
+                        <div class="swiper-navigation">
+                           <div class="swiper-button-next"></div>
+                           <div class="swiper-button-prev"></div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </section>
+         <!--Testimonial end-->
+
+          <!--Integrate apps start-->
+         <section class=" bg-gray-100 py-20"  id="integrations">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ">
+               <div class="grid grid-cols-12 mb-7 pb-2 justify-between">
+                  <div class="lg:col-span-6 lg:col-start-4 col-span-12">
+                     <div class="text-center  pb-2">
+                        <h2 class="mb-3 text-3xl">Integrate apps with just a few clicks</h2>
+                        <p class="mb-0">Connect your existing apps and workflows with pre-made integrations available for 400+ popular apps, plus custom integrations for more advanced users.</p>
+                     </div>
+                  </div>
+               </div>
+               <div class="grid grid-cols-12 mb-7 pb-2 text-center justify-center gap-0">
+                  <div class="col-span-12">
+                     <div class="marquee" >
+                        <div class="track">
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-1.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Microsoft Team</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-12.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Calendar</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-9.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Jira</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-4.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Slack</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-15.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Salesforce</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-2.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Zoom</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-3.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Tableau</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-12.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Calendar</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-4.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Slack</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-15.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Salesforce</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-2.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Zoom</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-3.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Tableau</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-12.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Calendar</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-2.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Zoom</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-2.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Zoom</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-3.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Tableau</span>
+                           </a>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-span-12 lg:px-7">
+                     <div class="marquee" >
+                        <div class="track-2">
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-7.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">MS Teams</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-10.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">HubSpot</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-6.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">OneDrive</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-2.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Zoom</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-14.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">GitHub</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-13.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Gmail</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-11.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Google</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-14.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">GitHub</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-13.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Gmail</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-10.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">HubSpot</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-6.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">OneDrive</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-2.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Zoom</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-14.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">GitHub</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-13.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Gmail</span>
+                           </a>
+                        </div>
+                     </div>
+                  </div>
+                  <div class="col-span-12">
+                     <div class="marquee" >
+                        <div class="track">
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-8.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">MS Excel</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-4.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Slack</span>
+                           </a>
+
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-2.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Zoom</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-3.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Tableau</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-15.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Dropbox</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-5.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Salesforce</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-9.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Jira</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-8.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">MS Excel</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-4.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Slack</span>
+                           </a>
+
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-2.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Zoom</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-3.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Tableau</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-15.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Dropbox</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-5.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Salesforce</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-9.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Jira</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-15.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Dropbox</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-5.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Salesforce</span>
+                           </a>
+                           <a href="#" class="btn btn-light rounded-full me-1 mb-3 btn-logo btn-lift">
+                              <span><img src="/assets/images/integration-logo/integrate-logo-9.svg" alt="logo" class="h-6 w-6" /></span>
+                              <span class="ms-1 hidden lg:inline-flex text-sm">Jira</span>
+                           </a>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div class="grid grid-cols-12">
+                  <div class="col-span-12">
+                     <div class="text-center flex justify-center items-center flex-col md:flex-row gap-4">
+                        <a href="#" class="btn btn-dark me-4">Get Started</a>
+                        <a href="#" class="text-purple-500 hover:underline mt-3 md:mt-0 flex items-center gap-2">
+                           <span>See all integrations</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-narrow-right"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M15 16l4 -4" /><path d="M15 8l4 4" /></svg>
+                        </a>
+                     </div>
+                  </div>
+               </div>
+               </div>
+           
+         </section>
+         <!--Integrate apps end-->
+          <!--Call to action start-->
+         <section class="my-16" id="contact">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" >
+                  <div class="grid grid-cols-12 bg-pattern bg-linear-to-b from-[#9b58ff] via-[#8837ff] to-[#7a20ff] rounded-xl lg:p-14 p-6 g-0 ">
+                    <div class="lg:col-span-8 lg:col-start-3 col-span-12 justify-center text-center">
+                      <div class="relative z-1 my-lg-5">
+                        <div class="mb-8 text-center">
+                           <h3 class="text-3xl text-white mb-1">Try our powerful work management tools</h3>
+                           <p class="mb-0 text-white">Sign up for a free two-week trial of Block today — no credit card required.</p>
+                        </div>
+                        <form class="grid grid-cols-12 gap-3  lg:mx-12" >
+                           <div class="md:col-span-7 md:col-start-2 col-span-12">
+                             <label for="notificationEmail" class="visually-hidden"></label>
+                             <input type="email" id="notificationEmail" class="block w-full rounded-lg border-gray-200 focus:border-gray-300 focus:ring focus:ring-gray-200 focus:ring-opacity-50" placeholder="Enter your business email" aria-label="Enter your business email" required />
+                            
+                           </div>
+                           <div class="md:col-span-4 col-span-12">
+                             <div class="grid justify-between">
+                               <button class="btn btn-dark" type="submit">Get notified for free</button>
+                             </div>
+                           </div>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+            </div>
+         </section>
+         <!--Call to action end-->
+
+    </main>
+<footer class="pt-7">
+   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Footer 4 column -->
+      <div class="grid grid-cols-12 gap-6">
+         <div class="lg:col-span-9 col-span-12">
+            <div class="grid grid-cols-12 gap-6" id="ft-links">
+               <div class="lg:col-span-3 md:col-span-6 col-span-12">
+                  <div class="relative">
+                     <div class="mb-3 pb-2 flex justify-between border-b border-gray-200 lg:border-b-0">
+                        <h4 class="text-lg">Service</h4>
+                        
+                     </div>
+                     <div class=""  >
+                        <ul class=" mb-0">
+                           <li class="mb-2">
+                              <a href="./index.html" class="hover:text-purple-500 ">Web App Development</a>
+                           </li>
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">Front End Development</a>
+                           </li>
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">MVP Development</a>
+                           </li>
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">Digital Marketing</a>
+                           </li>
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">Content Writing</a>
+                           </li>
+                        </ul>
+                     </div>
+                  </div>
+               </div>
+               <div class="lg:col-span-3 md:col-span-6 col-span-12">
+                  <div>
+                     <div class="mb-3 pb-2 flex justify-between border-b border-gray-200 lg:border-b-0 relative">
+                        <h4 class="text-lg">About us</h4>
+                       
+                     </div>
+                     <div >
+                        <ul class=" mb-0">
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">Case Studies</a>
+                           </li>
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">Blog</a>
+                           </li>
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">Services</a>
+                           </li>
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">About</a>
+                           </li>
+                           <li class="mb-2">
+                              <a href="#!" class="hover:text-purple-500 ">Career</a>
+                           </li>
+                        </ul>
+                     </div>
+                  </div>
+               </div>
+               <div class="lg:col-span-3 md:col-span-6 col-span-12">
+                  <div class="mb-3 pb-2 flex justify-between border-b border-gray-200 lg:border-b-0 relative">
+                     <h4 class="text-lg">Technology</h4>
+                    
+                  </div>
+                  <div >
+                     <ul class=" mb-0">
+                        <li class="mb-2">
+                           <a href="./docs/index.html" class="hover:text-purple-500 ">Next.js</a>
+                        </li>
+                        <li class="mb-2">
+                           <a href="#!" class="hover:text-purple-500 ">Sanity</a>
+                        </li>
+                        <li class="mb-2">
+                           <a href="./changelog.html" class="hover:text-purple-500 ">Content ful</a>
+                        </li>
+                        <li class="mb-2">
+                           <a href="#!" class="hover:text-purple-500 ">Vercel</a>
+                        </li>
+                        <li class="mb-2">
+                           <a href="#!" class="hover:text-purple-500 ">Netlify</a>
+                        </li>
+                     </ul>
+                  </div>
+               </div>
+               <div class="lg:col-span-3 md:col-span-6 col-span-12">
+                  <div class="mb-3 pb-2 flex justify-between border-b border-gray-200 lg:border-b-0 relative">
+                     <h4 class="text-lg">Locations</h4>
+                    
+                  </div>
+                  <div>
+                     <ul class=" mb-0">
+                        <li class="mb-2">
+                           <a href="./docs/index.html" class="hover:text-purple-500 ">India</a>
+                        </li>
+                        <li class="mb-2">
+                           <a href="#!" class="hover:text-purple-500 ">Australia</a>
+                        </li>
+                        <li class="mb-2">
+                           <a href="./changelog.html" class="hover:text-purple-500 ">Brazil</a>
+                        </li>
+                        <li class="mb-2">
+                           <a href="#!" class="hover:text-purple-500 ">Canada</a>
+                        </li>
+                     </ul>
+                  </div>
+               </div>
+            </div>
+         </div>
+         <div class="lg:col-span-3 md:col-span-6 col-span-12">
+            <div class="me-7">
+               <h4 class="mb-4">Headquarters</h4>
+               <p class="">Codescandy, 412, Residency Rd, Shanthala Nagar, Ashok Nagar, Bengaluru, Karnataka, India 560025</p>
+            </div>
+         </div>
+      </div>
+   </div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+      <div class="grid grid-cols-12 items-center gap-6">
+         <div class="lg:col-span-3 col-span-12">
+            <a class="mb-4 mb-lg-0 block text-inverse" href="../index.html"><img src="/assets/images/logo/logo.svg" alt="" /></a>
+         </div>
+         <div class="md:col-span-9 lg:col-span-6 col-span-12">
+            <div class="text-sm mb-3 mb-lg-0 text-lg-center">
+               Copyright © 2025
+
+               <span><a href="#">Block</a></span>
+               | Designed by
+               <span><a href="https://codescandy.com" target="_blank" class="text-purple-500">CodesCandy</a> • Distributed by <a href="https://themewagon.com" target="_blank" class="text-purple-500">ThemeWagon</a></span>
+            </div>
+         </div>
+         <div class="lg:col-span-3">
+            <div class="lg:text-end flex items-center lg:justify-end">
+
+               <div class="flex gap-4">
+                  <a href="#!" class="">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-brand-instagram"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 8a4 4 0 0 1 4 -4h8a4 4 0 0 1 4 4v8a4 4 0 0 1 -4 4h-8a4 4 0 0 1 -4 -4z" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /><path d="M16.5 7.5v.01" /></svg>
+                  </a>
+                  <a href="#!" class="">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-brand-facebook"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3" /></svg>
+                 </a>
+                  <a href="#!" class="">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4l11.733 16h4.267l-11.733 -16z" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg>
+                  </a>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</footer>
+
+
+
+
+  
+
+
+
+
     </div>
 </template>
