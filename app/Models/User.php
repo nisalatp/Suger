@@ -93,6 +93,11 @@ class User extends Authenticatable
         return $this->hasMany(Doctor::class);
     }
 
+    public function labReports()
+    {
+        return $this->hasMany(LabReport::class);
+    }
+
     public function reportExports()
     {
         return $this->hasMany(ReportExport::class);

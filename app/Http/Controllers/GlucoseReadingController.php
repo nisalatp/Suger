@@ -169,11 +169,13 @@ class GlucoseReadingController extends Controller
 
         if (!empty($validated['last_meal_at'])) {
             $lastMeal = \Carbon\Carbon::parse($validated['last_meal_at']);
-            $minutesSinceMeal = $measuredAt->diffInMinutes($lastMeal);
+            $diff = $measuredAt->diffInMinutes($lastMeal, false); // signed: negative means last_meal is in the future
+            $minutesSinceMeal = $diff > 0 ? $diff : null; // null if invalid (future date entered)
         }
         if (!empty($validated['last_drink_at'])) {
             $lastDrink = \Carbon\Carbon::parse($validated['last_drink_at']);
-            $minutesSinceDrink = $measuredAt->diffInMinutes($lastDrink);
+            $diff = $measuredAt->diffInMinutes($lastDrink, false); // signed
+            $minutesSinceDrink = $diff > 0 ? $diff : null; // null if invalid (future date entered)
         }
 
         $reading = $user->glucoseReadings()->create([

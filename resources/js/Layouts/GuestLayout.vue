@@ -12,7 +12,7 @@ import { Link } from '@inertiajs/vue3';
             </div>
             <div class="relative z-10 flex flex-col justify-center px-16 text-white">
                 <Link href="/" class="flex items-center gap-3 mb-12">
-                    <span class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold text-lg backdrop-blur-sm">S</span>
+                    <img src="/assets/images/suger-logo.svg" alt="Suger" class="w-11 h-11 drop-shadow-lg" />
                     <span class="text-2xl font-bold">Suger</span>
                 </Link>
                 <h2 class="text-4xl font-bold leading-tight mb-6">Take control of your blood glucose journey</h2>
@@ -39,7 +39,7 @@ import { Link } from '@inertiajs/vue3';
             <div class="w-full max-w-sm">
                 <div class="lg:hidden flex items-center gap-2 justify-center mb-8">
                     <Link href="/">
-                        <span class="w-9 h-9 bg-purple-600 rounded-lg flex items-center justify-center text-white font-bold">S</span>
+                        <img src="/assets/images/suger-logo.svg" alt="Suger" class="w-9 h-9" />
                     </Link>
                     <span class="text-xl font-bold text-gray-900">Suger</span>
                 </div>

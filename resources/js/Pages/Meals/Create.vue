@@ -1,7 +1,7 @@
 <script setup>
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import axios from 'axios';
 
 const form = useForm({
@@ -13,17 +13,75 @@ const form = useForm({
 
 const naturalQuery = ref('');
 const analyzing = ref(false);
+const breakdown = ref(null); // holds the full response from /nutrition/analyze
+const fileInput = ref(null);
+
+const triggerCamera = () => {
+    if (fileInput.value) {
+        fileInput.value.click();
+    }
+};
+
+const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    analyzing.value = true;
+    breakdown.value = null;
+    naturalQuery.value = 'Analyzing photo...';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const response = await axios.post('/nutrition/analyze-vision', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        if (response.data && response.data.items && response.data.items.length > 0) {
+            breakdown.value = response.data;
+            const formItems = response.data.items.map(item => ({
+                food_name:     item.food_name,
+                quantity:      item.quantity,
+                quantity_unit: item.quantity_unit,
+                carbs_g:       item.carbs_g,
+                calories_kcal: item.calories_kcal,
+            }));
+            form.items = [...form.items, ...formItems];
+            naturalQuery.value = 'Photo analyzed successfully!';
+            setTimeout(() => { naturalQuery.value = ''; }, 3000);
+        } else {
+            alert('Could not identify food in the photo. Please try again.');
+            naturalQuery.value = '';
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Failed to analyze photo. Ensure it is a clear image of food.');
+        naturalQuery.value = '';
+    } finally {
+        analyzing.value = false;
+        event.target.value = null; // reset input
+    }
+};
 
 const analyzeFood = async () => {
-    if (!naturalQuery.value.trim()) return;
-    
+    if (!naturalQuery.value.trim() || naturalQuery.value === 'Analyzing photo...' || naturalQuery.value === 'Photo analyzed successfully!') return;
     analyzing.value = true;
+    breakdown.value = null;
     try {
         const response = await axios.post('/nutrition/analyze', { query: naturalQuery.value });
         if (response.data && response.data.items && response.data.items.length > 0) {
-            // Append or replace? Let's append to existing items
-            form.items = [...form.items, ...response.data.items];
-            naturalQuery.value = ''; // clear upon success
+            breakdown.value = response.data;
+            // Strip extended fields before appending to form.items (those are display-only)
+            const formItems = response.data.items.map(item => ({
+                food_name:     item.food_name,
+                quantity:      item.quantity,
+                quantity_unit: item.quantity_unit,
+                carbs_g:       item.carbs_g,
+                calories_kcal: item.calories_kcal,
+            }));
+            form.items = [...form.items, ...formItems];
+            naturalQuery.value = '';
         } else {
             alert('Could not identify any food items. Please try describing them differently or enter them manually.');
         }
@@ -42,6 +100,9 @@ const addItem = () => {
 const removeItem = (idx) => {
     form.items.splice(idx, 1);
 };
+
+const totalCalories = computed(() => form.items.reduce((s, i) => s + (Number(i.calories_kcal) || 0), 0));
+const totalCarbs    = computed(() => form.items.reduce((s, i) => s + (Number(i.carbs_g) || 0), 0));
 
 const submit = () => {
     form.post(route('meals.store'));
@@ -82,19 +143,103 @@ const submit = () => {
                     </div>
 
                     <!-- AI Smart Logging Section -->
-                    <div class="bg-purple-50 rounded-2xl p-5 border border-purple-100">
-                        <label class="flex items-center gap-2 text-sm font-bold text-purple-900 mb-2">
+                    <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-5 border border-purple-100">
+                        <label class="flex items-center gap-2 text-sm font-bold text-purple-900 mb-1">
                             <span>✨ Smart Tracking</span>
                         </label>
                         <p class="text-xs text-purple-700 mb-3 font-medium">Type what you ate naturally, and we'll calculate the macros.</p>
-                        <div class="flex gap-2">
-                            <input type="text" v-model="naturalQuery" @keyup.enter.prevent="analyzeFood"
-                                   placeholder="e.g., '3 eggs, 2 slices of whole wheat toast, and 1 apple'" 
-                                   class="flex-1 rounded-xl border-purple-200 shadow-sm text-sm focus:ring-purple-500 focus:border-purple-500" />
-                            <button type="button" @click="analyzeFood" :disabled="analyzing || !naturalQuery"
-                                    class="px-5 py-2 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
-                                {{ analyzing ? 'Analyzing...' : 'Analyze' }}
+                        <div class="flex gap-2 items-center">
+                            <!-- Hidden file input for camera/image upload -->
+                            <input type="file" ref="fileInput" accept="image/*" capture="environment" class="hidden" @change="handleImageUpload" />
+                            
+                            <button type="button" @click="triggerCamera" :disabled="analyzing" title="Upload Photo"
+                                    class="p-2 bg-white border border-purple-200 text-purple-600 rounded-xl hover:bg-purple-50 transition shadow-sm disabled:opacity-50">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                                </svg>
                             </button>
+                            
+                            <input type="text" v-model="naturalQuery" @keyup.enter.prevent="analyzeFood"
+                                   placeholder="e.g., '3 eggs, 2 slices of toast...'" 
+                                   :disabled="analyzing"
+                                   class="flex-1 rounded-xl border-purple-200 shadow-sm text-sm focus:ring-purple-500 focus:border-purple-500 disabled:opacity-50 disabled:bg-gray-50" />
+                            <button type="button" @click="analyzeFood" :disabled="analyzing || (!naturalQuery && !fileInput)"
+                                    class="px-5 py-2 bg-purple-600 text-white rounded-xl text-sm font-bold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm">
+                                {{ analyzing ? '⏳...' : '✨ Analyze' }}
+                            </button>
+                        </div>
+
+                        <!-- Breakdown panel: appears after a successful analysis -->
+                        <div v-if="breakdown" class="mt-4 border-t border-purple-200 pt-4">
+                            <p class="text-xs font-bold text-purple-800 uppercase tracking-wider mb-3">📊 Nutrition Breakdown</p>
+
+                            <!-- Per-item breakdown -->
+                            <div class="space-y-2 mb-4">
+                                <div v-for="(item, idx) in breakdown.items" :key="idx"
+                                     class="bg-white/70 rounded-xl p-3 border border-purple-100">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-semibold text-sm text-gray-800 capitalize">{{ item.food_name }}</span>
+                                        <span class="text-xs text-gray-500">{{ item.quantity }}g</span>
+                                    </div>
+                                    <div class="grid grid-cols-4 gap-2 text-center">
+                                        <div class="bg-orange-50 rounded-lg px-2 py-1.5">
+                                            <div class="text-sm font-bold text-orange-600">{{ item.calories_kcal }}</div>
+                                            <div class="text-[10px] text-orange-400 font-semibold uppercase">kcal</div>
+                                        </div>
+                                        <div class="bg-purple-50 rounded-lg px-2 py-1.5">
+                                            <div class="text-sm font-bold text-purple-600">{{ item.carbs_g }}g</div>
+                                            <div class="text-[10px] text-purple-400 font-semibold uppercase">carbs</div>
+                                        </div>
+                                        <div class="bg-blue-50 rounded-lg px-2 py-1.5">
+                                            <div class="text-sm font-bold text-blue-600">{{ item.protein_g ?? '—' }}g</div>
+                                            <div class="text-[10px] text-blue-400 font-semibold uppercase">protein</div>
+                                        </div>
+                                        <div class="bg-yellow-50 rounded-lg px-2 py-1.5">
+                                            <div class="text-sm font-bold text-yellow-600">{{ item.fat_total_g ?? '—' }}g</div>
+                                            <div class="text-[10px] text-yellow-500 font-semibold uppercase">fat</div>
+                                        </div>
+                                    </div>
+                                    <!-- Extra detail row -->
+                                    <div class="flex gap-3 mt-2 text-[11px] text-gray-500">
+                                        <span v-if="item.fiber_g !== undefined">🌾 Fiber: <b>{{ item.fiber_g }}g</b></span>
+                                        <span v-if="item.sugar_g !== undefined">🍬 Sugar: <b>{{ item.sugar_g }}g</b></span>
+                                        <span v-if="item.sodium_mg !== undefined">🧂 Sodium: <b>{{ item.sodium_mg }}mg</b></span>
+                                        <span v-if="item.cholesterol_mg !== undefined">💛 Chol: <b>{{ item.cholesterol_mg }}mg</b></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total summary bar -->
+                            <div class="bg-white/80 rounded-xl p-3 border border-purple-200">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Total</p>
+                                <div class="grid grid-cols-2 sm:grid-cols-6 gap-2 text-center">
+                                    <div class="col-span-1">
+                                        <div class="text-base font-extrabold text-orange-600">{{ breakdown.total_calories }}</div>
+                                        <div class="text-[10px] text-gray-400 font-semibold">kcal</div>
+                                    </div>
+                                    <div class="col-span-1">
+                                        <div class="text-base font-extrabold text-purple-600">{{ breakdown.total_carbs }}g</div>
+                                        <div class="text-[10px] text-gray-400 font-semibold">carbs</div>
+                                    </div>
+                                    <div class="col-span-1">
+                                        <div class="text-base font-extrabold text-blue-600">{{ breakdown.total_protein }}g</div>
+                                        <div class="text-[10px] text-gray-400 font-semibold">protein</div>
+                                    </div>
+                                    <div class="col-span-1">
+                                        <div class="text-base font-extrabold text-yellow-600">{{ breakdown.total_fat }}g</div>
+                                        <div class="text-[10px] text-gray-400 font-semibold">fat</div>
+                                    </div>
+                                    <div class="col-span-1">
+                                        <div class="text-base font-extrabold text-green-600">{{ breakdown.total_fiber }}g</div>
+                                        <div class="text-[10px] text-gray-400 font-semibold">fiber</div>
+                                    </div>
+                                    <div class="col-span-1">
+                                        <div class="text-base font-extrabold text-pink-600">{{ breakdown.total_sugar }}g</div>
+                                        <div class="text-[10px] text-gray-400 font-semibold">sugar</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 

@@ -9,6 +9,7 @@ use App\Http\Controllers\ExerciseController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ReportExportController;
+use App\Http\Controllers\LabReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -50,6 +51,7 @@ Route::middleware('auth')->group(function () {
 
     // Nutrition API
     Route::post('/nutrition/analyze', [\App\Http\Controllers\NutritionController::class, 'analyze'])->name('nutrition.analyze');
+    Route::post('/nutrition/analyze-vision', [\App\Http\Controllers\NutritionController::class, 'analyzeVision'])->name('nutrition.vision');
 
     // Meals
     Route::resource('meals', MealController::class)->parameters([
@@ -87,6 +89,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportExportController::class, 'index'])->name('reports.index');
     Route::post('/reports', [ReportExportController::class, 'store'])->name('reports.store');
     Route::get('/reports/{reportExport:public_id}/download', [ReportExportController::class, 'download'])->name('reports.download');
+
+    // Lab Reports
+    Route::resource('lab-reports', LabReportController::class)->parameters([
+        'lab-reports' => 'labReport:public_id',
+    ]);
 });
 
 require __DIR__.'/auth.php';

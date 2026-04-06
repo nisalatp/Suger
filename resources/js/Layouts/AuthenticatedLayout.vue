@@ -56,6 +56,7 @@ const navItems = [
     { name: 'Meals', route: 'meals.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5A2 2 0 0 0 3 14h18A2 2 0 0 0 19 12ZM7 12V9m5 3V8m5 4V9" /></svg>' },
     { name: 'Exercise', route: 'exercise.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12h4l2-8 4 16 2-8h4" /></svg>' },
     { name: 'Medications', route: 'medications.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.25 14.75l-9.5-9.5a3 3 0 0 0-4.25 4.25l9.5 9.5a3 3 0 0 0 4.25-4.25Z M9 5l-4 4 M15 15l4-4" /></svg>' },
+    { name: 'Lab Reports', route: 'lab-reports.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 1-6.23-.693L5 14.5m14.8.8 1.402 1.402c1 1 .03 2.798-1.442 2.798H4.24c-1.472 0-2.441-1.798-1.442-2.798L4.2 15.3" /></svg>' },
     { name: 'Doctors', route: 'doctors.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m-3-3h6M5 3h14A2 2 0 0121 5v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" /></svg>' },
     { name: 'Reports', route: 'reports.index', icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6zM13.5 3v7.5H21A7.5 7.5 0 0013.5 3z" /></svg>' },
 ];
@@ -83,7 +84,7 @@ const doctorNavItem = {
         ]">
             <!-- Sidebar Header / Logo -->
             <div :class="['flex items-center h-16 border-b border-gray-100 shrink-0 transition-all duration-300', isSidebarCollapsed ? 'justify-center px-2 gap-0' : 'px-4 gap-3']"> 
-                <img src="/assets/images/suger-logo.png" alt="Suger" class="h-8 w-8 rounded-lg shrink-0" />
+                <img src="/assets/images/suger-logo.svg" alt="Suger" class="h-8 w-8 rounded-lg shrink-0" />
                 <span v-if="!isSidebarCollapsed || showingMobileMenu" class="text-xl font-bold text-gray-900 tracking-tight whitespace-nowrap transition-opacity duration-300 flex-1">Suger</span>
                 <!-- Collapse toggle — header position (standard: Linear, Notion, VS Code) -->
                 <button @click="toggleSidebar" :title="isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'" class="hidden lg:flex items-center justify-center w-7 h-7 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors shrink-0">
@@ -182,7 +183,7 @@ const doctorNavItem = {
             <!-- Mobile Top Bar -->
             <div class="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-gray-100 shrink-0 sticky top-0 z-30 shadow-sm">
                 <div class="flex items-center gap-2">
-                    <img src="/assets/images/suger-logo.png" alt="Suger" class="h-8 w-8 rounded-lg" />
+                    <img src="/assets/images/suger-logo.svg" alt="Suger" class="h-8 w-8 rounded-lg" />
                     <span class="text-lg font-bold text-gray-900 tracking-tight">Suger</span>
                 </div>
                 <!-- Server time: center -->
